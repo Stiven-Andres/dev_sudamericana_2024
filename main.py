@@ -123,40 +123,5 @@ async def eliminar_partido(partido_id: int, session: AsyncSession = Depends(get_
     return {"ok": True}
 
 # ----------- REPORTES --------------
-@app.post("/reportes/", response_model=ReporteSQL)
-async def crear_reporte(reporte: ReporteSQL, session: AsyncSession = Depends(get_session)):
-    return await create_reporte_sql(session, reporte)
 
-
-@app.get("/reportes/", response_model=List[ReporteSQL])
-async def listar_reportes(session: AsyncSession = Depends(get_session)):
-    return await obtener_todos_los_reportes(session)
-
-
-@app.get("/reportes/{reporte_id}", response_model=ReporteSQL)
-async def obtener_reporte(reporte_id: int, session: AsyncSession = Depends(get_session)):
-    reporte = await obtener_reporte_por_id(session, reporte_id)
-    if not reporte:
-        raise HTTPException(status_code=404, detail="Reporte no encontrado")
-    return reporte
-
-
-@app.put("/reportes/{reporte_id}", response_model=ReporteSQL)
-async def actualizar_reporte(
-    reporte_id: int,
-    nuevos_datos: dict,  # {"ruta_archivo": "..."}
-    session: AsyncSession = Depends(get_session)
-):
-    reporte = await actualizar_reporte_sql(session, reporte_id, nuevos_datos)
-    if not reporte:
-        raise HTTPException(status_code=404, detail="Reporte no encontrado")
-    return reporte
-
-
-@app.delete("/reportes/{reporte_id}")
-async def eliminar_reporte(reporte_id: int, session: AsyncSession = Depends(get_session)):
-    eliminado = await eliminar_reporte_sql(session, reporte_id)
-    if not eliminado:
-        raise HTTPException(status_code=404, detail="Reporte no encontrado")
-    return {"ok": True}
 
