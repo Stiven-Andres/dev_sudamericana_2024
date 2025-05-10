@@ -51,11 +51,38 @@ async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
     partido.created_at = remove_tzinfo(partido.created_at)
-
     partido_db = PartidoSQL.model_validate(partido, from_attributes=True)
     partido_db.created_at = datetime.utcnow()
-
     session.add(partido_db)
+
+    # Buscar equipos
+    local = await session.get(EquipoSQL, partido.equipo_local_id)
+    visitante = await session.get(EquipoSQL, partido.equipo_visitante_id)
+
+    if local:
+        local.tarjetas_amarillas += partido.tarjetas_amarillas_local
+        local.tarjetas_rojas += partido.tarjetas_rojas_local
+        local.tiros_esquina += partido.tiros_esquina_local
+        local.tiros_libres += partido.tiros_libres_local
+        local.goles_a_favor += partido.goles_local
+        local.goles_en_contra += partido.goles_visitante
+        local.faltas += partido.faltas_local
+        local.fueras_de_juego += partido.fueras_de_juego_local
+        local.pases += partido.pases_local
+
+    if visitante:
+        visitante.tarjetas_amarillas += partido.tarjetas_amarillas_visitante
+        visitante.tarjetas_rojas += partido.tarjetas_rojas_visitante
+        visitante.tiros_esquina += partido.tiros_esquina_visitante
+        visitante.tiros_libres += partido.tiros_libres_visitante
+        visitante.goles_a_favor += partido.goles_visitante
+        visitante.goles_en_contra += partido.goles_local
+        visitante.faltas += partido.faltas_visitante
+        visitante.fueras_de_juego += partido.fueras_de_juego_visitante
+        visitante.pases += partido.pases_visitante
+
+    # Guardar cambios
+    session.add_all([local, visitante])
     await session.commit()
     await session.refresh(partido_db)
     return partido_db
