@@ -6,11 +6,35 @@ from typing import Optional
 from enum import Enum
 from pydantic import ConfigDict
 
+
+
+# --------- Otros ---------
+class Fases(str, Enum):
+    Play_off = "Play off"
+    grupos = "Grupos"
+    repechaje = "Repechaje"
+    octavos = "Octavos"
+    cuartos = "Cuartos"
+    semifinal = "Semifinal"
+    final = "Final"
+
+class Paises(str, Enum):
+    argentina = "Argentina"
+    bolivia = "Bolivia"
+    brasil = "Brasil"
+    chile = "Chile"
+    colombia = "Colombia"
+    ecuador = "Ecuador"
+    paraguay = "Paraguay"
+    peru = "Perú"
+    uruguay = "Uruguay"
+    venezuela = "Venezuela"
+
 # --------- Modelo Equipo ---------
 class EquipoSQL(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str = Field(min_length=3, max_length=50)
-    pais: str = Field(..., min_length=2, max_length=30)
+    pais: Paises = Field(default=Paises.colombia)
     grupo: str = Field(..., min_length=1, max_length=10)
     puntos: int = Field(..., ge=0)
     goles_a_favor: int = Field(..., ge=0)
@@ -24,12 +48,12 @@ class PartidoSQL(SQLModel, table=True):
     equipo_visitante_id: int = Field(foreign_key="equiposql.id")
     goles_local: int = Field(..., ge=0)
     goles_visitante: int = Field(..., ge=0)
-    fase: str = Field(..., min_length=3)
+    fase: Fases = Field(default=Fases.Play_off)
 
 
 # --------- Modelo Reporte ---------
 class ReportePorPaisSQL(SQLModel, table=True):
-    pais: str = Field(..., min_length=2, max_length=30)
+    pais: Paises = Field(default=None)
     total_equipos: int = Field(..., ge=0)
     total_puntos: int = Field(..., ge=0)
     promedio_goles_favor: float = Field(..., ge=0)
@@ -37,7 +61,7 @@ class ReportePorPaisSQL(SQLModel, table=True):
 
 class ReportePorFaseSQL(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    fase: str = Field(..., min_length=3)
+    fase: Fases = Field(default=Fases.Play_off)
     total_partidos: int = Field(..., ge=0)
     total_goles: int = Field(..., ge=0)
     promedio_goles_por_partido: float = Field(..., ge=0)
@@ -46,8 +70,5 @@ class ReportePorFaseSQL(SQLModel, table=True):
 
 
 
-# --------- Otros ---------
-class EquipoUpdate(BaseModel):
-    puntos: Optional[int]
-    goles_a_favor: Optional[int]
-    goles_en_contra: Optional[int]
+
+
