@@ -28,15 +28,21 @@ class PartidoSQL(SQLModel, table=True):
 
 
 # --------- Modelo Reporte ---------
-class ReporteSQL(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    nombre: str = Field(..., min_length=3, max_length=50)
-    equipo_local_id: int = Field(foreign_key="equiposql.id")
-    equipo_visitante_id: int = Field(foreign_key="equiposql.id")
-    resultado: str = Field(..., min_length=3, max_length=30)
-    tipo: str = Field(..., min_length=3, max_length=30)
-    ruta_archivo: str = Field(..., min_length=3)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+class ReportePorPaisSQL(SQLModel, table=True):
+    pais: str = Field(..., min_length=2, max_length=30)
+    total_equipos: int = Field(..., ge=0)
+    total_puntos: int = Field(..., ge=0)
+    promedio_goles_favor: float = Field(..., ge=0)
+    promedio_goles_contra: float = Field(..., ge=0)
+
+class ReportePorFechasSQL(SQLModel, table=True):
+    fecha_inicio: datetime
+    fecha_fin: datetime
+    total_partidos: int = Field(..., ge=0)
+    total_goles: int = Field(..., ge=0)
+    promedio_goles_por_partido: float = Field(..., ge=0)
+
+
 
 
 # --------- Otros ---------
