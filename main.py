@@ -8,7 +8,7 @@ from typing import List
 from utils.connection_db import *
 from contextlib import asynccontextmanager
 from models import *
-from operations import create_equipo_sql, obtener_todos_los_equipos, obtener_equipo_por_id, actualizar_equipo_sql, eliminar_equipo_sql, create_partido_sql, obtener_todos_los_partidos, obtener_partido_por_id, actualizar_partido_sql, eliminar_partido_sql
+from operations import create_equipo_sql, obtener_todos_los_equipos, obtener_equipo_por_id, eliminar_equipo_sql, obtener_todos_los_partidos, obtener_partido_por_id, eliminar_partido_sql
 
 
 
@@ -77,7 +77,47 @@ async def eliminar_equipo(equipo_id: int, session: AsyncSession = Depends(get_se
 # ----------- PARTIDOS --------------
 @app.post("/partidos/", response_model=PartidoSQL)
 async def crear_partido(partido: PartidoSQL, session: AsyncSession = Depends(get_session)):
-    return await create_partido_sql(session, partido)
+    # Guardar el partido
+    session.add(partido)
+    await session.commit()
+    await session.refresh(partido)
+
+    # Buscar los equipos involucrados
+    equipo_local = await session.get(EquipoSQL, partido.equipo_local_id)
+    equipo_visitante = await session.get(EquipoSQL, partido.equipo_visitante_id)
+
+    if not equipo_local or not equipo_visitante:
+        raise HTTPException(status_code=404, detail="Uno de los equipos no fue encontrado")
+
+    # Actualizar estadísticas del equipo local
+    equipo_local.goles_a_favor += partido.goles_local
+    equipo_local.goles_en_contra += partido.goles_visitante
+    equipo_local.tarjetas_amarillas += partido.tarjetas_amarillas_local
+    equipo_local.tarjetas_rojas += partido.tarjetas_rojas_local
+    equipo_local.tiros_esquina += partido.tiros_esquina_local
+    equipo_local.tiros_libres += partido.tiros_libres_local
+
+    # Actualizar estadísticas del equipo visitante
+    equipo_visitante.goles_a_favor += partido.goles_visitante
+    equipo_visitante.goles_en_contra += partido.goles_local
+    equipo_visitante.tarjetas_amarillas += partido.tarjentas_amarillas_visitante
+    equipo_visitante.tarjetas_rojas += partido.tarjetas_rojas_visitante
+    equipo_visitante.tiros_esquina += partido.tiros_esquina_visitante
+    equipo_visitante.tiros_libres += partido.tiros_libres_visitante
+
+    # Actualizar puntos (si aplica, dependiendo del sistema)
+    if partido.goles_local > partido.goles_visitante:
+        equipo_local.puntos += 3
+    elif partido.goles_local < partido.goles_visitante:
+        equipo_visitante.puntos += 3
+    else:
+        equipo_local.puntos += 1
+        equipo_visitante.puntos += 1
+
+    session.add_all([equipo_local, equipo_visitante])
+    await session.commit()
+
+    return partido
 
 
 @app.get("/partidos/", response_model=List[PartidoSQL])
