@@ -53,6 +53,7 @@ class PartidoSQL(SQLModel, table=True):
 
 # --------- Modelo Reporte ---------
 class ReportePorPaisSQL(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
     pais: Paises = Field(default=None)
     total_equipos: int = Field(..., ge=0)
     total_puntos: int = Field(..., ge=0)
@@ -65,10 +66,4 @@ class ReportePorFaseSQL(SQLModel, table=True):
     total_partidos: int = Field(..., ge=0)
     total_goles: int = Field(..., ge=0)
     promedio_goles_por_partido: float = Field(..., ge=0)
-    equipos_involucrados: int = Field(..., ge=0)
-
-
-
-
-
 

@@ -32,25 +32,7 @@ async def obtener_equipo_por_id(session: AsyncSession, equipo_id: int):
     result = await session.execute(query)
     return result.scalar_one_or_none()
 
-
-async def actualizar_equipo_sql(session: AsyncSession, equipo_id: int, nuevos_datos: dict):
-    query = select(EquipoSQL).where(EquipoSQL.id == equipo_id)
-    result = await session.execute(query)
-    equipo = result.scalar_one_or_none()
-
-    if equipo is None:
-        return None
-
-    # Solo permitir actualizar estos campos
-    campos_permitidos = {"puntos", "goles_a_favor", "goles_en_contra"}
-    for key in campos_permitidos:
-        if key in nuevos_datos:
-            setattr(equipo, key, nuevos_datos[key])
-
-    session.add(equipo)
-    await session.commit()
-    await session.refresh(equipo)
-    return equipo
+#--------------------------actualizar equipo
 
 
 async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
@@ -91,24 +73,7 @@ async def obtener_partido_por_id(session: AsyncSession, partido_id: int):
     return result.scalar_one_or_none()
 
 
-async def actualizar_partido_sql(session: AsyncSession, partido_id: int, nuevos_datos: dict):
-    query = select(PartidoSQL).where(PartidoSQL.id == partido_id)
-    result = await session.execute(query)
-    partido = result.scalar_one_or_none()
-
-    if partido is None:
-        return None
-
-    # Solo permitir actualizar estos campos
-    campos_permitidos = {"goles_local", "goles_visitante", "fase"}
-    for key in campos_permitidos:
-        if key in nuevos_datos:
-            setattr(partido, key, nuevos_datos[key])
-
-    session.add(partido)
-    await session.commit()
-    await session.refresh(partido)
-    return partido
+#--------------------------actualizar partido
 
 
 async def eliminar_partido_sql(session: AsyncSession, partido_id: int):

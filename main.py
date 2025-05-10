@@ -7,8 +7,8 @@ from sqlalchemy.orm import sessionmaker
 from typing import List
 from utils.connection_db import *
 from contextlib import asynccontextmanager
-from models import EquipoSQL, PartidoSQL, ReporteSQL, EquipoUpdate
-from operations import create_equipo_sql, obtener_todos_los_equipos, obtener_equipo_por_id, actualizar_equipo_sql, eliminar_equipo_sql, create_partido_sql, obtener_todos_los_partidos, obtener_partido_por_id, actualizar_partido_sql, eliminar_partido_sql, create_reporte_sql, obtener_todos_los_reportes, obtener_reporte_por_id, actualizar_reporte_sql, eliminar_reporte_sql
+from models import *
+from operations import create_equipo_sql, obtener_todos_los_equipos, obtener_equipo_por_id, actualizar_equipo_sql, eliminar_equipo_sql, create_partido_sql, obtener_todos_los_partidos, obtener_partido_por_id, actualizar_partido_sql, eliminar_partido_sql
 
 
 
@@ -64,17 +64,7 @@ async def obtener_equipo(equipo_id: int, session: AsyncSession = Depends(get_ses
     return equipo
 
 
-@app.put("/equipos/{equipo_id}", response_model=EquipoSQL)
-async def actualizar_equipo(
-    equipo_id: int,
-    nuevos_datos: EquipoUpdate,
-    session: AsyncSession = Depends(get_session)
-):
-    datos_dict = nuevos_datos.dict(exclude_unset=True)
-    equipo = await actualizar_equipo_sql(session, equipo_id, datos_dict)
-    if not equipo:
-        raise HTTPException(status_code=404, detail="Equipo no encontrado")
-    return equipo
+
 
 
 @app.delete("/equipos/{equipo_id}")
@@ -103,16 +93,7 @@ async def obtener_partido(partido_id: int, session: AsyncSession = Depends(get_s
     return partido
 
 
-@app.put("/partidos/{partido_id}", response_model=PartidoSQL)
-async def actualizar_partido(
-    partido_id: int,
-    nuevos_datos: dict,  # {"goles_local": ..., "goles_visitante": ..., "fase": ...}
-    session: AsyncSession = Depends(get_session)
-):
-    partido = await actualizar_partido_sql(session, partido_id, nuevos_datos)
-    if not partido:
-        raise HTTPException(status_code=404, detail="Partido no encontrado")
-    return partido
+
 
 
 @app.delete("/partidos/{partido_id}")
