@@ -116,6 +116,38 @@ async def eliminar_partido_sql(session: AsyncSession, partido_id: int):
     if partido is None:
         return False
 
+    # Obtener los equipos involucrados
+    equipo_local = await session.get(EquipoSQL, partido.equipo_local_id)
+    equipo_visitante = await session.get(EquipoSQL, partido.equipo_visitante_id)
+
+    if not equipo_local or not equipo_visitante:
+        return False
+
+    # Revertir estadísticas del equipo local
+    equipo_local.goles_a_favor -= partido.goles_local
+    equipo_local.goles_en_contra -= partido.goles_visitante
+    equipo_local.tarjetas_amarillas -= partido.tarjetas_amarillas_local
+    equipo_local.tarjetas_rojas -= partido.tarjetas_rojas_local
+    equipo_local.tiros_esquina -= partido.tiros_esquina_local
+    equipo_local.tiros_libres -= partido.tiros_libres_local
+    equipo_local.faltas -= partido.faltas_local
+    equipo_local.fueras_de_juego -= partido.fueras_de_juego_local
+    equipo_local.pases -= partido.pases_local
+
+    # Revertir estadísticas del equipo visitante
+    equipo_visitante.goles_a_favor -= partido.goles_visitante
+    equipo_visitante.goles_en_contra -= partido.goles_local
+    equipo_visitante.tarjetas_amarillas -= partido.tarjetas_amarillas_visitante
+    equipo_visitante.tarjetas_rojas -= partido.tarjetas_rojas_visitante
+    equipo_visitante.tiros_esquina -= partido.tiros_esquina_visitante
+    equipo_visitante.tiros_libres -= partido.tiros_libres_visitante
+    equipo_visitante.faltas -= partido.faltas_visitante
+    equipo_visitante.fueras_de_juego -= partido.fueras_de_juego_visitante
+    equipo_visitante.pases -= partido.pases_visitante
+
+    session.add_all([equipo_local, equipo_visitante])
+
+    # Eliminar el partido
     await session.delete(partido)
     await session.commit()
     return True
