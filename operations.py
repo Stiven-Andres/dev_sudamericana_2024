@@ -17,6 +17,9 @@ def remove_tzinfo(dt: Optional[datetime | str]) -> Optional[datetime]:
         return dt.astimezone(timezone.utc).replace(tzinfo=None)
     return dt
 
+def restar_valor(valor_actual, valor_a_restar):
+    return max(0, valor_actual - valor_a_restar)
+
 async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
     equipo_db = EquipoSQL.model_validate(equipo, from_attributes=True)
     session.add(equipo_db)
@@ -54,8 +57,10 @@ async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
 # --------------------------------------------------------- operations Partido -----------------------------------------------------------------------------
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
-    partido.created_at = remove_tzinfo(partido.created_at)
+    def default(value):
+        return value if value is not None else 0
 
+    partido.created_at = remove_tzinfo(partido.created_at)
     partido_db = PartidoSQL.model_validate(partido, from_attributes=True)
     partido_db.created_at = datetime.now()
     session.add(partido_db)
@@ -64,34 +69,37 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
     local = await session.get(EquipoSQL, partido.equipo_local_id)
     visitante = await session.get(EquipoSQL, partido.equipo_visitante_id)
 
-    if local:
-        local.tarjetas_amarillas += partido.tarjetas_amarillas_local
-        local.tarjetas_rojas += partido.tarjetas_rojas_local
-        local.tiros_esquina += partido.tiros_esquina_local
-        local.tiros_libres += partido.tiros_libres_local
-        local.goles_a_favor += partido.goles_local
-        local.goles_en_contra += partido.goles_visitante
-        local.faltas += partido.faltas_local
-        local.fueras_de_juego += partido.fueras_de_juego_local
-        local.pases += partido.pases_local
+    if not local or not visitante:
+        raise HTTPException(status_code=404, detail="Equipo local o visitante no encontrado")
 
-    if visitante:
-        visitante.tarjetas_amarillas += partido.tarjetas_amarillas_visitante
-        visitante.tarjetas_rojas += partido.tarjetas_rojas_visitante
-        visitante.tiros_esquina += partido.tiros_esquina_visitante
-        visitante.tiros_libres += partido.tiros_libres_visitante
-        visitante.goles_a_favor += partido.goles_visitante
-        visitante.goles_en_contra += partido.goles_local
-        visitante.faltas += partido.faltas_visitante
-        visitante.fueras_de_juego += partido.fueras_de_juego_visitante
-        visitante.pases += partido.pases_visitante
+    # Actualizar local
+    local.tarjetas_amarillas += default(partido.tarjetas_amarillas_local)
+    local.tarjetas_rojas += default(partido.tarjetas_rojas_local)
+    local.tiros_esquina += default(partido.tiros_esquina_local)
+    local.tiros_libres += default(partido.tiros_libres_local)
+    local.goles_a_favor += default(partido.goles_local)
+    local.goles_en_contra += default(partido.goles_visitante)
+    local.faltas += default(partido.faltas_local)
+    local.fueras_de_juego += default(partido.fueras_de_juego_local)
+    local.pases += default(partido.pases_local)
+
+    # Actualizar visitante
+    visitante.tarjetas_amarillas += default(partido.tarjetas_amarillas_visitante)
+    visitante.tarjetas_rojas += default(partido.tarjetas_rojas_visitante)
+    visitante.tiros_esquina += default(partido.tiros_esquina_visitante)
+    visitante.tiros_libres += default(partido.tiros_libres_visitante)
+    visitante.goles_a_favor += default(partido.goles_visitante)
+    visitante.goles_en_contra += default(partido.goles_local)
+    visitante.faltas += default(partido.faltas_visitante)
+    visitante.fueras_de_juego += default(partido.fueras_de_juego_visitante)
+    visitante.pases += default(partido.pases_visitante)
 
     # Guardar cambios
-    session.add_all([local, visitante])
+    session.add(local)
+    session.add(visitante)
     await session.commit()
     await session.refresh(partido_db)
     return partido_db
-
 
 async def obtener_todos_los_partidos(session: AsyncSession):
     query = select(PartidoSQL)
@@ -124,26 +132,26 @@ async def eliminar_partido_sql(session: AsyncSession, partido_id: int):
         return False
 
     # Revertir estadísticas del equipo local
-    equipo_local.goles_a_favor -= partido.goles_local
-    equipo_local.goles_en_contra -= partido.goles_visitante
-    equipo_local.tarjetas_amarillas -= partido.tarjetas_amarillas_local
-    equipo_local.tarjetas_rojas -= partido.tarjetas_rojas_local
-    equipo_local.tiros_esquina -= partido.tiros_esquina_local
-    equipo_local.tiros_libres -= partido.tiros_libres_local
-    equipo_local.faltas -= partido.faltas_local
-    equipo_local.fueras_de_juego -= partido.fueras_de_juego_local
-    equipo_local.pases -= partido.pases_local
+    equipo_local.goles_a_favor = restar_valor(equipo_local.goles_a_favor, partido.goles_local)
+    equipo_local.goles_en_contra = restar_valor(equipo_local.goles_en_contra, partido.goles_visitante)
+    equipo_local.tarjetas_amarillas = restar_valor(equipo_local.tarjetas_amarillas, partido.tarjetas_amarillas_local)
+    equipo_local.tarjetas_rojas = restar_valor(equipo_local.tarjetas_rojas, partido.tarjetas_rojas_local)
+    equipo_local.tiros_esquina = restar_valor(equipo_local.tiros_esquina, partido.tiros_esquina_local)
+    equipo_local.tiros_libres = restar_valor(equipo_local.tiros_libres, partido.tiros_libres_local)
+    equipo_local.faltas = restar_valor(equipo_local.faltas, partido.faltas_local)
+    equipo_local.fueras_de_juego = restar_valor(equipo_local.fueras_de_juego, partido.fueras_de_juego_local)
+    equipo_local.pases = restar_valor(equipo_local.pases, partido.pases_local)
 
     # Revertir estadísticas del equipo visitante
-    equipo_visitante.goles_a_favor -= partido.goles_visitante
-    equipo_visitante.goles_en_contra -= partido.goles_local
-    equipo_visitante.tarjetas_amarillas -= partido.tarjetas_amarillas_visitante
-    equipo_visitante.tarjetas_rojas -= partido.tarjetas_rojas_visitante
-    equipo_visitante.tiros_esquina -= partido.tiros_esquina_visitante
-    equipo_visitante.tiros_libres -= partido.tiros_libres_visitante
-    equipo_visitante.faltas -= partido.faltas_visitante
-    equipo_visitante.fueras_de_juego -= partido.fueras_de_juego_visitante
-    equipo_visitante.pases -= partido.pases_visitante
+    equipo_visitante.goles_a_favor = restar_valor(equipo_visitante.goles_a_favor, partido.goles_visitante)
+    equipo_visitante.goles_en_contra = restar_valor(equipo_visitante.goles_en_contra, partido.goles_local)
+    equipo_visitante.tarjetas_amarillas = restar_valor(equipo_visitante.tarjetas_amarillas, partido.tarjetas_amarillas_visitante)
+    equipo_visitante.tarjetas_rojas = restar_valor(equipo_visitante.tarjetas_rojas, partido.tarjetas_rojas_visitante)
+    equipo_visitante.tiros_esquina = restar_valor(equipo_visitante.tiros_esquina, partido.tiros_esquina_visitante)
+    equipo_visitante.tiros_libres = restar_valor(equipo_visitante.tiros_libres, partido.tiros_libres_visitante)
+    equipo_visitante.faltas = restar_valor(equipo_visitante.faltas, partido.faltas_visitante)
+    equipo_visitante.fueras_de_juego = restar_valor(equipo_visitante.fueras_de_juego, partido.fueras_de_juego_visitante)
+    equipo_visitante.pases = restar_valor(equipo_visitante.pases, partido.pases_visitante)
 
     session.add_all([equipo_local, equipo_visitante])
 
