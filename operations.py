@@ -1,16 +1,19 @@
 from sqlalchemy.future import select
 from sqlalchemy import update
 from models import EquipoSQL, PartidoSQL
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from sqlmodel import Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 def remove_tzinfo(dt: Optional[datetime | str]) -> Optional[datetime]:
     if isinstance(dt, str):
-        dt = datetime.fromisoformat(dt)  # convierte string a datetime
+        # Reemplaza 'Z' por '+00:00' para que sea compatible con fromisoformat
+        if dt.endswith("Z"):
+            dt = dt.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(dt)
     if isinstance(dt, datetime) and dt.tzinfo:
-        return dt.replace(tzinfo=None)
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
     return dt
 
 async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
@@ -51,8 +54,9 @@ async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
     partido.created_at = remove_tzinfo(partido.created_at)
+
     partido_db = PartidoSQL.model_validate(partido, from_attributes=True)
-    partido_db.created_at = datetime.utcnow()
+    partido_db.created_at = datetime.now()
     session.add(partido_db)
 
     # Buscar equipos

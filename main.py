@@ -92,6 +92,10 @@ async def eliminar_equipo(equipo_id: int, session: AsyncSession = Depends(get_se
 # ----------- PARTIDOS --------------
 @app.post("/partidos/", response_model=PartidoSQL)
 async def crear_partido(partido: PartidoSQL, session: AsyncSession = Depends(get_session)):
+    # Validar y convertir created_at si viene como string
+    if isinstance(partido.created_at, str):
+        partido.created_at = datetime.fromisoformat(partido.created_at.replace("Z", "+00:00"))
+
     # Guardar el partido
     session.add(partido)
     await session.commit()
@@ -115,12 +119,12 @@ async def crear_partido(partido: PartidoSQL, session: AsyncSession = Depends(get
     # Actualizar estadísticas del equipo visitante
     equipo_visitante.goles_a_favor += partido.goles_visitante
     equipo_visitante.goles_en_contra += partido.goles_local
-    equipo_visitante.tarjetas_amarillas += partido.tarjentas_amarillas_visitante
+    equipo_visitante.tarjetas_amarillas += partido.tarjetas_amarillas_visitante
     equipo_visitante.tarjetas_rojas += partido.tarjetas_rojas_visitante
     equipo_visitante.tiros_esquina += partido.tiros_esquina_visitante
     equipo_visitante.tiros_libres += partido.tiros_libres_visitante
 
-    # Actualizar puntos (si aplica, dependiendo del sistema)
+    # Actualizar puntos
     if partido.goles_local > partido.goles_visitante:
         equipo_local.puntos += 3
     elif partido.goles_local < partido.goles_visitante:
@@ -133,7 +137,6 @@ async def crear_partido(partido: PartidoSQL, session: AsyncSession = Depends(get
     await session.commit()
 
     return partido
-
 
 @app.get("/partidos/", response_model=List[PartidoSQL])
 async def listar_partidos(session: AsyncSession = Depends(get_session)):
