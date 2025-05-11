@@ -9,6 +9,12 @@ from pydantic import ConfigDict
 
 
 # --------- Otros ---------
+class EquipoCreate(BaseModel):
+    nombre: str
+    pais: Paises  # usa el mismo Enum que ya definiste
+    grupo: str
+    puntos: int
+
 class Fases(str, Enum):
     Play_off = "Play off"
     grupos = "Grupos"
