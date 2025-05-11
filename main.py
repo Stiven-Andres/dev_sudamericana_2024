@@ -47,8 +47,23 @@ async def lanzar_error():
 
 # ----------- EQUIPOS --------------
 @app.post("/equipos/", response_model=EquipoSQL)
-async def crear_equipo(equipo: EquipoSQL, session: AsyncSession = Depends(get_session)):
-    return await create_equipo_sql(session, equipo)
+async def crear_equipo(equipo: EquipoCreate, session: AsyncSession = Depends(get_session)):
+    equipo_db = EquipoSQL(
+        nombre=equipo.nombre,
+        pais=equipo.pais,
+        grupo=equipo.grupo,
+        puntos=equipo.puntos,
+        tarjetas_amarillas=0,
+        tarjetas_rojas=0,
+        tiros_esquina=0,
+        tiros_libres=0,
+        goles_a_favor=0,
+        goles_en_contra=0,
+        faltas=0,
+        fueras_de_juego=0,
+        pases=0
+    )
+    return await create_equipo_sql(session, equipo_db)
 
 
 @app.get("/equipos/", response_model=List[EquipoSQL])
