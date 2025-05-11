@@ -8,7 +8,8 @@ from typing import List
 from utils.connection_db import *
 from contextlib import asynccontextmanager
 from models import *
-from operations import create_equipo_sql, obtener_todos_los_equipos, obtener_equipo_por_id, eliminar_equipo_sql, obtener_todos_los_partidos, obtener_partido_por_id, eliminar_partido_sql
+from operations import (create_equipo_sql, obtener_todos_los_equipos, obtener_equipo_por_id, eliminar_equipo_sql, obtener_todos_los_partidos
+, obtener_partido_por_id, eliminar_partido_sql, generar_reportes_por_pais)
 
 
 
@@ -162,3 +163,7 @@ async def eliminar_partido(partido_id: int, session: AsyncSession = Depends(get_
     return {"ok": True}
 
 # ----------- REPORTES --------------
+
+@app.get("/reportes/pais/{pais}", response_model=List[ReportePorPaisSQL])
+async def reporte_por_pais(pais: Paises, session: AsyncSession = Depends(get_session)):
+    return await generar_reportes_por_pais(session, pais)
