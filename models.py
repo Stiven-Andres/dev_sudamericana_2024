@@ -31,8 +31,9 @@ class Paises(str, Enum):
     venezuela = "Venezuela"
 
 class EquipoCreate(BaseModel):
+    id: Optional[int] = None
     nombre: str
-    pais: Paises  # usa el mismo Enum que ya definiste
+    pais: Paises
     grupo: str
     puntos: int
 
