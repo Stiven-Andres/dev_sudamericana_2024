@@ -1,6 +1,6 @@
 from sqlalchemy.future import select
 from sqlalchemy import update
-from models import EquipoSQL, PartidoSQL, ReporteSQL
+from models import EquipoSQL, PartidoSQL
 from datetime import datetime
 from typing import Dict, Any, Optional
 from sqlmodel import Session
