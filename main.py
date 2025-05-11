@@ -162,5 +162,3 @@ async def eliminar_partido(partido_id: int, session: AsyncSession = Depends(get_
     return {"ok": True}
 
 # ----------- REPORTES --------------
-
-

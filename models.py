@@ -88,10 +88,3 @@ class ReportePorPaisSQL(SQLModel, table=True):
     promedio_goles_favor: float = Field(..., ge=0)
     promedio_goles_contra: float = Field(..., ge=0)
 
-class ReportePorFaseSQL(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    fase: Fases = Field(default=Fases.Play_off)
-    total_partidos: int = Field(..., ge=0)
-    total_goles: int = Field(..., ge=0)
-    promedio_goles_por_partido: float = Field(..., ge=0)
-
