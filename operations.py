@@ -1,5 +1,6 @@
 from sqlalchemy.future import select
 from sqlalchemy import update
+from fastapi import HTTPException
 from models import *
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
@@ -76,12 +77,18 @@ async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
 # --------------------------------------------------------- operations Partido -----------------------------------------------------------------------------
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
+    if partido.id is None or partido.id <= 0:
+        raise HTTPException(status_code=400, detail="El ID del partido debe ser mayor que 0")
+
+    # Verificar si ya existe un partido con ese ID
+    existente = await session.get(PartidoSQL, partido.id)
+    if existente:
+        raise HTTPException(status_code=409, detail=f"Ya existe un partido con ID {partido.id}")
+
     def default(value):
         return value if value is not None else 0
 
     partido.created_at = remove_tzinfo(partido.created_at)
-    partido.updated_at = remove_tzinfo(partido.updated_at)
-
     partido_db = PartidoSQL.model_validate(partido, from_attributes=True)
     partido_db.created_at = datetime.now()
     session.add(partido_db)
@@ -93,7 +100,7 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
     if not local or not visitante:
         raise HTTPException(status_code=404, detail="Equipo local o visitante no encontrado")
 
-    # Actualizar local
+    # Actualizar estadísticas (como ya tienes)
     local.tarjetas_amarillas += default(partido.tarjetas_amarillas_local)
     local.tarjetas_rojas += default(partido.tarjetas_rojas_local)
     local.tiros_esquina += default(partido.tiros_esquina_local)
@@ -104,7 +111,6 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
     local.fueras_de_juego += default(partido.fueras_de_juego_local)
     local.pases += default(partido.pases_local)
 
-    # Actualizar visitante
     visitante.tarjetas_amarillas += default(partido.tarjetas_amarillas_visitante)
     visitante.tarjetas_rojas += default(partido.tarjetas_rojas_visitante)
     visitante.tiros_esquina += default(partido.tiros_esquina_visitante)
@@ -115,12 +121,13 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
     visitante.fueras_de_juego += default(partido.fueras_de_juego_visitante)
     visitante.pases += default(partido.pases_visitante)
 
-    # Guardar cambios
     session.add(local)
     session.add(visitante)
+
     await session.commit()
     await session.refresh(partido_db)
     return partido_db
+
 
 async def obtener_todos_los_partidos(session: AsyncSession):
     query = select(PartidoSQL)
