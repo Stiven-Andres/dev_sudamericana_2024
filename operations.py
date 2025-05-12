@@ -39,7 +39,26 @@ async def obtener_equipo_por_id(session: AsyncSession, equipo_id: int):
     result = await session.execute(query)
     return result.scalar_one_or_none()
 
-#--------------------------actualizar equipo
+async def actualizar_datos_equipo(
+    session: AsyncSession,
+    equipo_id: int,
+    nuevo_grupo: Optional[str] = None,
+    nuevos_puntos: Optional[int] = None
+):
+    equipo = await session.get(EquipoSQL, equipo_id)
+    if not equipo:
+        raise HTTPException(status_code=404, detail="Equipo no encontrado")
+
+    if nuevo_grupo is not None:
+        equipo.grupo = nuevo_grupo
+
+    if nuevos_puntos is not None:
+        equipo.puntos = nuevos_puntos
+
+    session.add(equipo)
+    await session.commit()
+    await session.refresh(equipo)
+    return equipo
 
 
 async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
@@ -115,27 +134,6 @@ async def obtener_partido_por_id(session: AsyncSession, partido_id: int):
     return result.scalar_one_or_none()
 
 
-async def actualizar_datos_equipo(
-    session: AsyncSession,
-    equipo_id: int,
-    nuevo_grupo: Optional[str] = None,
-    nuevos_puntos: Optional[int] = None
-):
-    equipo = await session.get(EquipoSQL, equipo_id)
-    if not equipo:
-        raise HTTPException(status_code=404, detail="Equipo no encontrado")
-
-    if nuevo_grupo is not None:
-        equipo.grupo = nuevo_grupo
-
-    if nuevos_puntos is not None:
-        equipo.puntos = nuevos_puntos
-
-    session.add(equipo)
-    await session.commit()
-    await session.refresh(equipo)
-    return equipo
-
 
 async def eliminar_partido_sql(session: AsyncSession, partido_id: int):
     query = select(PartidoSQL).where(PartidoSQL.id == partido_id)
@@ -180,6 +178,24 @@ async def eliminar_partido_sql(session: AsyncSession, partido_id: int):
     await session.delete(partido)
     await session.commit()
     return True
+
+
+async def actualizar_partidos(
+    session: AsyncSession,
+    partido_id: int,
+    nueva_fase: str
+):
+    partido = await session.get(PartidoSQL, partido_id)
+    if not partido:
+        raise HTTPException(status_code=404, detail="Partido no encontrado")
+
+    partido.fase = nueva_fase
+    session.add(partido)
+    await session.commit()
+    await session.refresh(partido)
+
+    return partido
+
 
 # --------------------------------------------------------- operations Reporte -----------------------------------------------------------------------------
 async def generar_reportes_por_pais(session: AsyncSession, pais: Paises):

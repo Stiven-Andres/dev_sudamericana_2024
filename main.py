@@ -117,6 +117,14 @@ async def obtener_partido(partido_id: int, session: AsyncSession = Depends(get_s
     return partido
 
 
+@app.put("/partidos/{partido_id}/fase")
+async def actualizar_partido_endpoint(
+    partido_id: int,
+    fase: str,
+    session: AsyncSession = Depends(get_session)
+):
+    partido_actualizado = await actualizar_partidos(session, partido_id, fase)
+    return partido_actualizado
 
 
 
