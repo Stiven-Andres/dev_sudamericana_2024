@@ -49,6 +49,7 @@ async def lanzar_error():
 @app.post("/equipos/", response_model=EquipoSQL)
 async def crear_equipo(equipo: EquipoCreate, session: AsyncSession = Depends(get_session)):
     equipo_db = EquipoSQL(
+        id=equipo.id,
         nombre=equipo.nombre,
         pais=equipo.pais,
         grupo=equipo.grupo,

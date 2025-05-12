@@ -25,37 +25,38 @@ def remove_tzinfo(dt: Optional[datetime | str]) -> Optional[datetime]:
         return dt.astimezone(timezone.utc).replace(tzinfo=None)
     return dt
 
+
+
 def restar_valor(valor_actual, valor_a_restar):
     return max(0, valor_actual - valor_a_restar)
 
 
 async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
-    # Verificar si el ID es válido (no puede ser None ni menor o igual a 0)
-    if equipo.id is not None and equipo.id <= 0:
-        raise HTTPException(status_code=400, detail="El ID del equipo debe ser mayor que 0")
+    if equipo.id <= 0:
+        raise HTTPException(status_code=400, detail="El ID del equipo no puede ser 0 o negativo")
 
     # Verificar si ya existe un equipo con ese ID
-    if equipo.id is not None:
-        existente = await session.get(EquipoSQL, equipo.id)
-        if existente:
-            raise HTTPException(status_code=409, detail=f"Ya existe un equipo con ID {equipo.id}")
+    existente = await session.get(EquipoSQL, equipo.id)
+    if existente:
+        raise HTTPException(status_code=409, detail=f"Ya existe un equipo con ID {equipo.id}")
 
-    # Normalizar el nombre para evitar duplicados
-    nombre_normalizado = normalizar_nombre(equipo.nombre)
+    # Normalizar el nombre del nuevo equipo
+    nombre_normalizado_nuevo = normalizar_nombre(equipo.nombre)
 
-    equipos = await session.execute(select(EquipoSQL))
-    equipos = equipos.scalars().all()
+    # Verificar si ya existe un equipo con nombre similar (normalizado)
+    result = await session.execute(select(EquipoSQL))
+    equipos_existentes = result.scalars().all()
 
-    for eq in equipos:
-        if normalizar_nombre(eq.nombre) == nombre_normalizado:
-            raise HTTPException(status_code=409, detail=f"Ya existe un equipo con un nombre similar: {eq.nombre}")
+    for eq in equipos_existentes:
+        if normalizar_nombre(eq.nombre) == nombre_normalizado_nuevo:
+            raise HTTPException(status_code=409, detail=f"Ya existe un equipo con un nombre equivalente: {eq.nombre}")
 
-    # Crear el equipo en la base de datos
     equipo_db = EquipoSQL.model_validate(equipo, from_attributes=True)
     session.add(equipo_db)
     await session.commit()
     await session.refresh(equipo_db)
     return equipo_db
+
 
 
 async def obtener_todos_los_equipos(session: AsyncSession):
@@ -123,6 +124,9 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
         return value if value is not None else 0
 
     partido.created_at = remove_tzinfo(partido.created_at)
+    partido.updated_at = remove_tzinfo(partido.updated_at)
+
+
     partido_db = PartidoSQL.model_validate(partido, from_attributes=True)
     partido_db.created_at = datetime.now()
     session.add(partido_db)
