@@ -115,7 +115,26 @@ async def obtener_partido_por_id(session: AsyncSession, partido_id: int):
     return result.scalar_one_or_none()
 
 
-#--------------------------actualizar partido
+async def actualizar_datos_equipo(
+    session: AsyncSession,
+    equipo_id: int,
+    nuevo_grupo: Optional[str] = None,
+    nuevos_puntos: Optional[int] = None
+):
+    equipo = await session.get(EquipoSQL, equipo_id)
+    if not equipo:
+        raise HTTPException(status_code=404, detail="Equipo no encontrado")
+
+    if nuevo_grupo is not None:
+        equipo.grupo = nuevo_grupo
+
+    if nuevos_puntos is not None:
+        equipo.puntos = nuevos_puntos
+
+    session.add(equipo)
+    await session.commit()
+    await session.refresh(equipo)
+    return equipo
 
 
 async def eliminar_partido_sql(session: AsyncSession, partido_id: int):

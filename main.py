@@ -79,7 +79,17 @@ async def obtener_equipo(equipo_id: int, session: AsyncSession = Depends(get_ses
     return equipo
 
 
-
+@app.put("/equipos/{equipo_id}/actualizar-grupo-puntos")
+async def actualizar_equipo(
+    equipo_id: int,
+    grupo: Optional[str] = None,
+    puntos: Optional[int] = None,
+    session: AsyncSession = Depends(get_session)
+):
+    equipo_actualizado = await actualizar_datos_equipo(
+        session, equipo_id, nuevo_grupo=grupo, nuevos_puntos=puntos
+    )
+    return equipo_actualizado
 
 
 @app.delete("/equipos/{equipo_id}")
