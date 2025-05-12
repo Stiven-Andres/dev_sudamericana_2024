@@ -1,4 +1,5 @@
 from sqlalchemy.future import select
+import unicodedata
 from sqlalchemy import update
 from fastapi import HTTPException
 from models import *
@@ -7,6 +8,12 @@ from typing import Dict, Any, Optional
 from sqlmodel import Session
 from sqlalchemy import func, text
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+def normalizar_nombre(nombre: str) -> str:
+    nombre = nombre.lower()
+    nombre = unicodedata.normalize('NFKD', nombre)
+    nombre = ''.join(c for c in nombre if not unicodedata.combining(c))  # Elimina tildes
+    return nombre
 
 def remove_tzinfo(dt: Optional[datetime | str]) -> Optional[datetime]:
     if isinstance(dt, str):
@@ -22,11 +29,30 @@ def restar_valor(valor_actual, valor_a_restar):
     return max(0, valor_actual - valor_a_restar)
 
 async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
+    # Validar solo si se proporciona un ID explícito
+    if equipo.id is not None:
+        if equipo.id <= 0:
+            raise HTTPException(status_code=400, detail="El ID del equipo debe ser mayor que 0")
+
+        existente = await session.get(EquipoSQL, equipo.id)
+        if existente:
+            raise HTTPException(status_code=409, detail=f"Ya existe un equipo con ID {equipo.id}")
+
+    nombre_normalizado = normalizar_nombre(equipo.nombre)
+
+    equipos = await session.execute(select(EquipoSQL))
+    equipos = equipos.scalars().all()
+
+    for eq in equipos:
+        if normalizar_nombre(eq.nombre) == nombre_normalizado:
+            raise HTTPException(status_code=409, detail=f"Ya existe un equipo con un nombre similar: {eq.nombre}")
+
     equipo_db = EquipoSQL.model_validate(equipo, from_attributes=True)
     session.add(equipo_db)
     await session.commit()
     await session.refresh(equipo_db)
     return equipo_db
+
 
 
 async def obtener_todos_los_equipos(session: AsyncSession):
