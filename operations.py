@@ -106,13 +106,18 @@ async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
 # --------------------------------------------------------- operations Partido -----------------------------------------------------------------------------
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
+    # Verificación de ID válido
     if partido.id is None or partido.id <= 0:
         raise HTTPException(status_code=400, detail="El ID del partido debe ser mayor que 0")
 
-    # Verificar si ya existe un partido con ese ID
+    # Verificar si el partido ya existe
     existente = await session.get(PartidoSQL, partido.id)
     if existente:
         raise HTTPException(status_code=409, detail=f"Ya existe un partido con ID {partido.id}")
+
+    # ⚠️ Validar que los equipos no sean el mismo
+    if partido.equipo_local_id == partido.equipo_visitante_id:
+        raise HTTPException(status_code=400, detail="El equipo local y el equipo visitante no pueden ser el mismo")
 
     def default(value):
         return value if value is not None else 0
@@ -122,14 +127,14 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
     partido_db.created_at = datetime.now()
     session.add(partido_db)
 
-    # Buscar equipos
+    # Obtener los equipos
     local = await session.get(EquipoSQL, partido.equipo_local_id)
     visitante = await session.get(EquipoSQL, partido.equipo_visitante_id)
 
     if not local or not visitante:
         raise HTTPException(status_code=404, detail="Equipo local o visitante no encontrado")
 
-    # Actualizar estadísticas (como ya tienes)
+    # Actualizar estadísticas
     local.tarjetas_amarillas += default(partido.tarjetas_amarillas_local)
     local.tarjetas_rojas += default(partido.tarjetas_rojas_local)
     local.tiros_esquina += default(partido.tiros_esquina_local)
@@ -156,6 +161,7 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
     await session.commit()
     await session.refresh(partido_db)
     return partido_db
+
 
 
 async def obtener_todos_los_partidos(session: AsyncSession):
