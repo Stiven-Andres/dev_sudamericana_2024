@@ -28,16 +28,19 @@ def remove_tzinfo(dt: Optional[datetime | str]) -> Optional[datetime]:
 def restar_valor(valor_actual, valor_a_restar):
     return max(0, valor_actual - valor_a_restar)
 
-async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
-    # Validar solo si se proporciona un ID explícito
-    if equipo.id is not None:
-        if equipo.id <= 0:
-            raise HTTPException(status_code=400, detail="El ID del equipo debe ser mayor que 0")
 
+async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
+    # Verificar si el ID es válido (no puede ser None ni menor o igual a 0)
+    if equipo.id is not None and equipo.id <= 0:
+        raise HTTPException(status_code=400, detail="El ID del equipo debe ser mayor que 0")
+
+    # Verificar si ya existe un equipo con ese ID
+    if equipo.id is not None:
         existente = await session.get(EquipoSQL, equipo.id)
         if existente:
             raise HTTPException(status_code=409, detail=f"Ya existe un equipo con ID {equipo.id}")
 
+    # Normalizar el nombre para evitar duplicados
     nombre_normalizado = normalizar_nombre(equipo.nombre)
 
     equipos = await session.execute(select(EquipoSQL))
@@ -47,12 +50,12 @@ async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
         if normalizar_nombre(eq.nombre) == nombre_normalizado:
             raise HTTPException(status_code=409, detail=f"Ya existe un equipo con un nombre similar: {eq.nombre}")
 
+    # Crear el equipo en la base de datos
     equipo_db = EquipoSQL.model_validate(equipo, from_attributes=True)
     session.add(equipo_db)
     await session.commit()
     await session.refresh(equipo_db)
     return equipo_db
-
 
 
 async def obtener_todos_los_equipos(session: AsyncSession):
