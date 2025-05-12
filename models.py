@@ -57,7 +57,6 @@ class EquipoSQL(SQLModel, table=True):
 # --------- Modelo Partido ---------
 class PartidoSQL(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
     equipo_local_id: int = Field(foreign_key="equiposql.id")
     equipo_visitante_id: int = Field(foreign_key="equiposql.id")
     tarjetas_amarillas_local: int = Field(ge=0)
@@ -77,6 +76,8 @@ class PartidoSQL(SQLModel, table=True):
     goles_local: int = Field(..., ge=0)
     goles_visitante: int = Field(..., ge=0)
     fase: Fases = Field(default=Fases.Play_off)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
 
 
 # --------- Modelo Reporte ---------

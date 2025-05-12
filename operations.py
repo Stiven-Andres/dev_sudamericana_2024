@@ -61,6 +61,8 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
         return value if value is not None else 0
 
     partido.created_at = remove_tzinfo(partido.created_at)
+    partido.updated_at = remove_tzinfo(partido.updated_at)
+
     partido_db = PartidoSQL.model_validate(partido, from_attributes=True)
     partido_db.created_at = datetime.now()
     session.add(partido_db)
