@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="post" action="/equipos/" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label for="nombre" class="form-label">Nombre del equipo</label>
+    <input type="text" class="form-control" id="nombre" name="nombre" required>
+  </div>
+  <div class="mb-3">
+    <label for="pais" class="form-label">País</label>
+    <input type="text" class="form-control" id="pais" name="pais" required>
+  </div>
+  <div class="mb-3">
+    <label for="grupo" class="form-label">Grupo</label>
+    <input type="text" class="form-control" id="grupo" name="grupo" required>
+  </div>
+  <div class="mb-3">
+    <label for="puntos" class="form-label">Puntos</label>
+    <input type="number" class="form-control" id="puntos" name="puntos" required>
+  </div>
+  <div class="mb-3">
+    <label for="logo" class="form-label">Logo del equipo</label>
+    <input type="file" class="form-control" id="logo" name="logo" accept=".png,.jpg,.jpeg" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Registrar equipo</button>
+</form>
+{% endblock %}

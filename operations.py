@@ -31,15 +31,8 @@ def restar_valor(valor_actual, valor_a_restar):
     return max(0, valor_actual - valor_a_restar)
 
 
+
 async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
-    if equipo.id <= 0:
-        raise HTTPException(status_code=400, detail="El ID del equipo no puede ser 0 o negativo")
-
-    # Verificar si ya existe un equipo con ese ID
-    existente = await session.get(EquipoSQL, equipo.id)
-    if existente:
-        raise HTTPException(status_code=409, detail=f"Ya existe un equipo con ID {equipo.id}")
-
     # Normalizar el nombre del nuevo equipo
     nombre_normalizado_nuevo = normalizar_nombre(equipo.nombre)
 
@@ -51,11 +44,15 @@ async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
         if normalizar_nombre(eq.nombre) == nombre_normalizado_nuevo:
             raise HTTPException(status_code=409, detail=f"Ya existe un equipo con un nombre equivalente: {eq.nombre}")
 
+    # Crear una nueva instancia sin ID (la base de datos lo asignará automáticamente)
     equipo_db = EquipoSQL.model_validate(equipo, from_attributes=True)
+    equipo_db.id = None  # Asegúrate de que no estás forzando el ID
+
     session.add(equipo_db)
     await session.commit()
     await session.refresh(equipo_db)
     return equipo_db
+
 
 
 

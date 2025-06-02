@@ -44,6 +44,7 @@ class EquipoSQL(SQLModel, table=True):
     pais: Paises = Field(default=Paises.colombia)
     grupo: str = Field(..., min_length=1, max_length=10)
     puntos: int = Field(..., ge=0)
+    logo_url: Optional[str] = Field(default="img/shield.png")
     tarjetas_amarillas: int = Field(ge=0)
     tarjetas_rojas: int = Field(ge=0)
     tiros_esquina: int = Field(ge=0)

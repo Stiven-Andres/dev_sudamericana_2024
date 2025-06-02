@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
+from shutil import copyfileobj
+import uuid
+import os
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
@@ -32,6 +34,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/inicio", response_class=HTMLResponse)
 async def mostrar_inicio(request: Request):
     return templates.TemplateResponse("inicio.html", {"request": request})
+
+
+@app.get("/formulario-equipo", response_class=HTMLResponse)
+async def formulario_equipo(request: Request):
+    return templates.TemplateResponse("formulario_equipo.html", {"request": request})
 
 
 @app.get("/equipos-html", response_class=HTMLResponse)
@@ -67,13 +74,35 @@ async def lanzar_error():
 
 # ----------- EQUIPOS --------------
 @app.post("/equipos/", response_model=EquipoSQL)
-async def crear_equipo(equipo: EquipoCreate, session: AsyncSession = Depends(get_session)):
+async def crear_equipo_con_logo(
+    nombre: str = Form(...),
+    pais: str = Form(...),
+    grupo: str = Form(...),
+    puntos: int = Form(...),
+    logo: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session)
+):
+    # Verificar tipo de archivo
+    if logo.content_type not in ["image/png", "image/jpeg"]:
+        raise HTTPException(status_code=400, detail="Formato de imagen no válido (solo .png o .jpg)")
+
+    # Crear nombre único para el archivo
+    extension = os.path.splitext(logo.filename)[1]
+    nombre_archivo = f"{uuid.uuid4().hex}{extension}"
+    ruta_archivo = os.path.join("static", "img", nombre_archivo)
+
+    # Guardar imagen
+    os.makedirs("static/img", exist_ok=True)
+    with open(ruta_archivo, "wb") as buffer:
+        copyfileobj(logo.file, buffer)
+
+    # Crear instancia del modelo
     equipo_db = EquipoSQL(
-        id=equipo.id,
-        nombre=equipo.nombre,
-        pais=equipo.pais,
-        grupo=equipo.grupo,
-        puntos=equipo.puntos,
+        nombre=nombre,
+        pais=pais,
+        grupo=grupo,
+        puntos=puntos,
+        logo_url=f"img/{nombre_archivo}",  # ruta relativa desde /static
         tarjetas_amarillas=0,
         tarjetas_rojas=0,
         tiros_esquina=0,
@@ -84,6 +113,7 @@ async def crear_equipo(equipo: EquipoCreate, session: AsyncSession = Depends(get
         fueras_de_juego=0,
         pases=0
     )
+
     return await create_equipo_sql(session, equipo_db)
 
 
