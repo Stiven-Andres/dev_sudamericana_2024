@@ -1,29 +1,36 @@
 {% extends "base.html" %}
 
-{% block title %}Equipos{% endblock %}
+{% block title %}Equipos - Copa Sudamericana{% endblock %}
 
 {% block content %}
-    <h2>Listado de Equipos</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>País</th>
-                <th>Grupo</th>
-                <th>Puntos</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for equipo in equipos %}
-                <tr>
-                    <td>{{ equipo.id }}</td>
-                    <td>{{ equipo.nombre }}</td>
-                    <td>{{ equipo.pais }}</td>
-                    <td>{{ equipo.grupo }}</td>
-                    <td>{{ equipo.puntos }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container mt-5">
+  <h1 class="mb-4 text-center">Listado de Equipos</h1>
+  <div class="row">
+    {% for equipo in equipos %}
+    <div class="col-md-4 mb-4">
+      <div class="card shadow-sm border-primary">
+        <div class="card-body">
+          <div class="text-center mb-3">
+            <img src="{{ url_for('static', path='img/shield.png') }}" alt="Escudo" width="50">
+          </div>
+          <h5 class="card-title text-center">{{ equipo.nombre }}</h5>
+          <p><strong>País:</strong> {{ equipo.pais }}</p>
+          <p><strong>Grupo:</strong> {{ equipo.grupo }}</p>
+          <p><strong>Puntos:</strong> {{ equipo.puntos }}</p>
+          <hr>
+          <p><strong>Goles a favor:</strong> {{ equipo.goles_a_favor }}</p>
+          <p><strong>Goles en contra:</strong> {{ equipo.goles_en_contra }}</p>
+          <p><strong>Tarjetas amarillas:</strong> {{ equipo.tarjetas_amarillas }}</p>
+          <p><strong>Tarjetas rojas:</strong> {{ equipo.tarjetas_rojas }}</p>
+          <p><strong>Faltas:</strong> {{ equipo.faltas }}</p>
+          <p><strong>Fuera de juego:</strong> {{ equipo.fueras_de_juego }}</p>
+          <p><strong>Tiros de esquina:</strong> {{ equipo.tiros_esquina }}</p>
+          <p><strong>Tiros libres:</strong> {{ equipo.tiros_libres }}</p>
+          <p><strong>Pases:</strong> {{ equipo.pases }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
 {% endblock %}

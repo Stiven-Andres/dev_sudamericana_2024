@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Inicio{% endblock %}
+{% block title %}Inicio - Copa Sudamericana{% endblock %}
 
 {% block content %}
-    <h2>Bienvenido</h2>
-    <p>Este sistema muestra estadísticas de la Copa Sudamericana.</p>
+<div class="p-4 p-lg-5 bg-light rounded-3 text-center">
+    <div class="m-4 m-lg-5">
+        <h1 class="display-5 fw-bold">¡Bienvenido a la Copa Sudamericana!</h1>
+        <p class="fs-4">Explora los equipos, partidos y estadísticas del torneo.</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('mostrar_equipos') }}">Ver Equipos</a>
+    </div>
+</div>
 {% endblock %}
