@@ -1,22 +1,43 @@
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from sqlalchemy.orm import sessionmaker
-from typing import List
+from typing import List, Optional
 from utils.connection_db import *
 from contextlib import asynccontextmanager
 from models import *
 from operations import *
 
 
-
+# Configuración de plantilla Jinja2
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     yield
+
+
+templates = Jinja2Templates(directory="templates")
 app = FastAPI(lifespan=lifespan)
+
+# Archivos estáticos (CSS, imágenes, etc.)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+# ----------- VISTAS HTML (Jinja2) --------------
+@app.get("/inicio", response_class=HTMLResponse)
+async def mostrar_inicio(request: Request):
+    return templates.TemplateResponse("inicio.html", {"request": request})
+
+
+@app.get("/equipos-html", response_class=HTMLResponse)
+async def mostrar_equipos(request: Request, session: AsyncSession = Depends(get_session)):
+    equipos = await obtener_todos_los_equipos(session)
+    return templates.TemplateResponse("equipos.html", {"request": request, "equipos": equipos})
 
 
 # ----------- OTROS --------------
@@ -42,7 +63,6 @@ async def manejar_excepciones_http(request, exc):
 @app.get("/error")
 async def lanzar_error():
     raise HTTPException(status_code=400)
-
 
 
 # ----------- EQUIPOS --------------
@@ -100,6 +120,7 @@ async def eliminar_equipo(equipo_id: int, session: AsyncSession = Depends(get_se
         raise HTTPException(status_code=404, detail="Equipo no encontrado")
     return {"ok": True}
 
+
 # ----------- PARTIDOS --------------
 @app.post("/partidos/", response_model=PartidoSQL)
 async def crear_partido(partido: PartidoSQL, session: AsyncSession = Depends(get_session)):
@@ -128,7 +149,6 @@ async def actualizar_partido_endpoint(
     return partido_actualizado
 
 
-
 @app.delete("/partidos/{partido_id}")
 async def eliminar_partido(partido_id: int, session: AsyncSession = Depends(get_session)):
     eliminado = await eliminar_partido_sql(session, partido_id)
@@ -136,8 +156,8 @@ async def eliminar_partido(partido_id: int, session: AsyncSession = Depends(get_
         raise HTTPException(status_code=404, detail="Partido no encontrado")
     return {"ok": True}
 
-# ----------- REPORTES --------------
 
+# ----------- REPORTES --------------
 @app.get("/reportes/pais/{pais}", response_model=List[ReportePorPaisSQL])
 async def reporte_por_pais(pais: Paises, session: AsyncSession = Depends(get_session)):
     return await generar_reportes_por_pais(session, pais)
