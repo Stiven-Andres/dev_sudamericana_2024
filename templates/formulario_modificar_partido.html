@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Modificar Partido{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Modificar Partido</h1>
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <form action="/modificar-partido/buscar" method="post" class="needs-validation" novalidate>
+        <div class="mb-3">
+            <label for="partido_id" class="form-label">Ingresa el ID del Partido a Modificar:</label>
+            <input type="number" class="form-control" id="partido_id" name="partido_id" required min="1">
+            <div class="invalid-feedback">
+                Por favor, ingresa un ID de partido válido.
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Buscar Partido para Modificar</button>
+    </form>
+</div>
+{% endblock %}

@@ -46,7 +46,8 @@
                             <li><a class="dropdown-item" href="{{ url_for('mostrar_partidos') }}">Ver Todos</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_partido') }}">Añadir Partido</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_partido') }}">Buscar Partido</a></li>
-                            {# Puedes añadir aquí otras funcionalidades de partido como actualizar/eliminar si las implementas #}
+                            <li><hr class="dropdown-divider"></li> {# Separador #}
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_modificar_partido') }}">Modificar Partido</a></li> {# <-- ¡Añade esta línea! #}
                         </ul>
                     </li>
 

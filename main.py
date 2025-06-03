@@ -248,6 +248,163 @@ async def mostrar_partidos(request: Request, session: AsyncSession = Depends(get
     return templates.TemplateResponse("partidos.html", {"request": request, "partidos": partidos})
 
 
+@app.get("/formulario-modificar-partido/", response_class=HTMLResponse)
+async def mostrar_formulario_modificar_partido(request: Request):
+    """
+    Muestra el formulario para buscar un partido por ID para su modificación.
+    """
+    return templates.TemplateResponse("formulario_modificar_partido.html", {"request": request})
+
+
+@app.post("/modificar-partido/buscar", response_class=HTMLResponse)
+async def buscar_partido_para_modificar(
+        request: Request,
+        partido_id: int = Form(...),
+        session: AsyncSession = Depends(get_session)
+):
+    """
+    Busca un partido por ID y, si lo encuentra, lo muestra en un formulario de actualización.
+    """
+    print(f"DEBUG (main): POST /modificar-partido/buscar recibido. ID del formulario: '{partido_id}'")
+    try:
+        partido = await obtener_partido_por_id(session, partido_id)  # Esta función ya carga relaciones
+        if not partido:
+            raise HTTPException(status_code=404, detail=f"Partido con ID '{partido_id}' no encontrado.")
+
+        print(f"DEBUG (main): Partido {partido.id} encontrado para modificar.")
+        return templates.TemplateResponse(
+            "formulario_actualizar_partido_encontrado.html",
+            {
+                "request": request,
+                "partido": partido,
+                "fases_disponibles": Fases  # Pasar el Enum de Fases al template
+            }
+        )
+    except HTTPException as e:
+        print(f"DEBUG (main): HTTPException al buscar partido para modificar: {e.detail}")
+        return templates.TemplateResponse(
+            "formulario_modificar_partido.html",
+            {"request": request, "error_message": e.detail}
+        )
+    except Exception as e:
+        print(f"DEBUG (main): ERROR INESPERADO al buscar partido para modificar: {e}")
+        return templates.TemplateResponse(
+            "formulario_modificar_partido.html",
+            {"request": request, "error_message": f"Error interno del servidor: {e}"}
+        )
+
+
+@app.post("/modificar-partido/{partido_id}", response_class=HTMLResponse)
+async def procesar_modificacion_partido(
+        request: Request,
+        partido_id: int,  # Ya viene en la URL
+        goles_local: int = Form(...),
+        goles_visitante: int = Form(...),
+        tarjetas_amarillas_local: int = Form(0),
+        tarjetas_amarillas_visitante: int = Form(0),
+        tarjetas_rojas_local: int = Form(0),
+        tarjetas_rojas_visitante: int = Form(0),
+        tiros_esquina_local: int = Form(0),
+        tiros_esquina_visitante: int = Form(0),
+        tiros_libres_local: int = Form(0),
+        tiros_libres_visitante: int = Form(0),
+        faltas_local: int = Form(0),
+        faltas_visitante: int = Form(0),
+        fueras_de_juego_local: int = Form(0),
+        fueras_de_juego_visitante: int = Form(0),
+        pases_local: int = Form(0),
+        pases_visitante: int = Form(0),
+        fecha: str = Form(None),  # Si permites modificar la fecha
+        fase: Fases = Form(...),  # Asegúrate de que este Form sea del tipo Fases
+        session: AsyncSession = Depends(get_session)
+):
+    """
+    Procesa los datos enviados para actualizar un partido.
+    """
+    print(f"DEBUG (main): POST /modificar-partido/{partido_id} recibido. Procesando actualización.")
+
+    datos_actualizados = {
+        "goles_local": goles_local,
+        "goles_visitante": goles_visitante,
+        "tarjetas_amarillas_local": tarjetas_amarillas_local,
+        "tarjetas_amarillas_visitante": tarjetas_amarillas_visitante,
+        "tarjetas_rojas_local": tarjetas_rojas_local,
+        "tarjetas_rojas_visitante": tarjetas_rojas_visitante,
+        "tiros_esquina_local": tiros_esquina_local,
+        "tiros_esquina_visitante": tiros_esquina_visitante,
+        "tiros_libres_local": tiros_libres_local,
+        "tiros_libres_visitante": tiros_libres_visitante,
+        "faltas_local": faltas_local,
+        "faltas_visitante": faltas_visitante,
+        "fueras_de_juego_local": fueras_de_juego_local,
+        "fueras_de_juego_visitante": fueras_de_juego_visitante,
+        "pases_local": pases_local,
+        "pases_visitante": pases_visitante,
+        "fase": fase.value,  # Pasa el valor string del enum
+    }
+
+    if fecha:  # Si la fecha se envía y no es None
+        # Necesitas una función para convertir string a date/datetime si tu modelo lo requiere
+        from datetime import date
+        try:
+            datos_actualizados["fecha"] = date.fromisoformat(fecha)
+        except ValueError:
+            print(f"ERROR (main): Formato de fecha inválido para partido {partido_id}: {fecha}")
+            # Puedes manejar este error volviendo al formulario con un mensaje
+            partido = await obtener_partido_por_id(session, partido_id)
+            return templates.TemplateResponse(
+                "formulario_actualizar_partido_encontrado.html",
+                {
+                    "request": request,
+                    "partido": partido,
+                    "fases_disponibles": Fases,
+                    "error_message": "Formato de fecha inválido. Utiliza AAAA-MM-DD."
+                }
+            )
+
+    try:
+        partido_actualizado = await actualizar_partido_sql(session, partido_id, datos_actualizados)
+
+        if not partido_actualizado:
+            raise HTTPException(status_code=404, detail=f"Partido con ID '{partido_id}' no encontrado para actualizar.")
+
+        print(f"DEBUG (main): Partido {partido_actualizado.id} actualizado exitosamente.")
+        # Redirige a una página de éxito o al mismo formulario con un mensaje de éxito
+        return templates.TemplateResponse(
+            "formulario_actualizar_partido_encontrado.html",
+            {
+                "request": request,
+                "partido": partido_actualizado,
+                "fases_disponibles": Fases,
+                "success_message": "Partido actualizado exitosamente!"
+            }
+        )
+    except HTTPException as e:
+        print(f"DEBUG (main): HTTPException al procesar modificación de partido: {e.detail}")
+        # Recargar el partido para mostrarlo de nuevo en el formulario con el error
+        partido = await obtener_partido_por_id(session, partido_id)
+        return templates.TemplateResponse(
+            "formulario_actualizar_partido_encontrado.html",
+            {
+                "request": request,
+                "partido": partido,
+                "fases_disponibles": Fases,
+                "error_message": e.detail
+            }
+        )
+    except Exception as e:
+        print(f"DEBUG (main): ERROR INESPERADO al procesar modificación de partido: {e}")
+        # Recargar el partido para mostrarlo de nuevo en el formulario con el error
+        partido = await obtener_partido_por_id(session, partido_id)
+        return templates.TemplateResponse(
+            "formulario_actualizar_partido_encontrado.html",
+            {
+                "request": request,
+                "partido": partido,
+                "fases_disponibles": Fases,
+                "error_message": f"Error interno del servidor: {e}"
+            }
+        )
 
 # ----------- OTROS --------------
 @app.get("/")

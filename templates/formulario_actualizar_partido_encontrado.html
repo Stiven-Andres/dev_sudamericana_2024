@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Actualizar Partido{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Actualizar Partido (ID: {{ partido.id }})</h1>
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    {% if success_message %}
+    <div class="alert alert-success" role="alert">
+        {{ success_message }}
+    </div>
+    {% endif %}
+
+    <form action="/modificar-partido/{{ partido.id }}" method="post" class="needs-validation" novalidate>
+        <input type="hidden" name="partido_id" value="{{ partido.id }}">
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label for="equipo_local_nombre" class="form-label">Equipo Local</label>
+                <input type="text" class="form-control" id="equipo_local_nombre" value="{{ partido.equipo_local.nombre }}" disabled>
+                <input type="hidden" name="equipo_local_id" value="{{ partido.equipo_local.id }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="equipo_visitante_nombre" class="form-label">Equipo Visitante</label>
+                <input type="text" class="form-control" id="equipo_visitante_nombre" value="{{ partido.equipo_visitante.nombre }}" disabled>
+                <input type="hidden" name="equipo_visitante_id" value="{{ partido.equipo_visitante.id }}">
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="goles_local" class="form-label">Goles Local</label>
+                <input type="number" class="form-control" name="goles_local" min="0" value="{{ partido.goles_local }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="goles_visitante" class="form-label">Goles Visitante</label>
+                <input type="number" class="form-control" name="goles_visitante" min="0" value="{{ partido.goles_visitante }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="tarjetas_amarillas_local" class="form-label">Tarjetas Amarillas Local</label>
+                <input type="number" class="form-control" name="tarjetas_amarillas_local" min="0" value="{{ partido.tarjetas_amarillas_local }}">
+            </div>
+            <div class="col-md-6">
+                <label for="tarjetas_amarillas_visitante" class="form-label">Tarjetas Amarillas Visitante</label>
+                <input type="number" class="form-control" name="tarjetas_amarillas_visitante" min="0" value="{{ partido.tarjetas_amarillas_visitante }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="tarjetas_rojas_local" class="form-label">Tarjetas Rojas Local</label>
+                <input type="number" class="form-control" name="tarjetas_rojas_local" min="0" value="{{ partido.tarjetas_rojas_local }}">
+            </div>
+            <div class="col-md-6">
+                <label for="tarjetas_rojas_visitante" class="form-label">Tarjetas Rojas Visitante</label>
+                <input type="number" class="form-control" name="tarjetas_rojas_visitante" min="0" value="{{ partido.tarjetas_rojas_visitante }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="tiros_esquina_local" class="form-label">Tiros de Esquina Local</label>
+                <input type="number" class="form-control" name="tiros_esquina_local" min="0" value="{{ partido.tiros_esquina_local }}">
+            </div>
+            <div class="col-md-6">
+                <label for="tiros_esquina_visitante" class="form-label">Tiros de Esquina Visitante</label>
+                <input type="number" class="form-control" name="tiros_esquina_visitante" min="0" value="{{ partido.tiros_esquina_visitante }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="tiros_libres_local" class="form-label">Tiros Libres Local</label>
+                <input type="number" class="form-control" name="tiros_libres_local" min="0" value="{{ partido.tiros_libres_local }}">
+            </div>
+            <div class="col-md-6">
+                <label for="tiros_libres_visitante" class="form-label">Tiros Libres Visitante</label>
+                <input type="number" class="form-control" name="tiros_libres_visitante" min="0" value="{{ partido.tiros_libres_visitante }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="faltas_local" class="form-label">Faltas Local</label>
+                <input type="number" class="form-control" name="faltas_local" min="0" value="{{ partido.faltas_local }}">
+            </div>
+            <div class="col-md-6">
+                <label for="faltas_visitante" class="form-label">Faltas Visitante</label>
+                <input type="number" class="form-control" name="faltas_visitante" min="0" value="{{ partido.faltas_visitante }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="fueras_de_juego_local" class="form-label">Fueras de Juego Local</label>
+                <input type="number" class="form-control" name="fueras_de_juego_local" min="0" value="{{ partido.fueras_de_juego_local }}">
+            </div>
+            <div class="col-md-6">
+                <label for="fueras_de_juego_visitante" class="form-label">Fueras de Juego Visitante</label>
+                <input type="number" class="form-control" name="fueras_de_juego_visitante" min="0" value="{{ partido.fueras_de_juego_visitante }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="pases_local" class="form-label">Pases Local</label>
+                <input type="number" class="form-control" name="pases_local" min="0" value="{{ partido.pases_local }}">
+            </div>
+            <div class="col-md-6">
+                <label for="pases_visitante" class="form-label">Pases Visitante</label>
+                <input type="number" class="form-control" name="pases_visitante" min="0" value="{{ partido.pases_visitante }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="fecha" class="form-label">Fecha del Partido</label>
+                <input type="date" class="form-control" name="fecha" value="{{ partido.fecha.strftime('%Y-%m-%d') if partido.fecha else '' }}">
+            </div>
+
+            <div class="col-md-6">
+                <label for="fase" class="form-label">Fase</label>
+                <select class="form-select" name="fase" required>
+                    {% for fase_enum in fases_disponibles %}
+                        <option value="{{ fase_enum.value }}" {% if partido.fase and partido.fase.value == fase_enum.value %}selected{% endif %}>
+                            {{ fase_enum.value }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <hr class="my-4">
+        <button type="submit" class="btn btn-success">Actualizar Partido</button>
+        <a href="{{ url_for('mostrar_formulario_modificar_partido') }}" class="btn btn-secondary">Buscar otro</a>
+    </form>
+</div>
+{% endblock %}

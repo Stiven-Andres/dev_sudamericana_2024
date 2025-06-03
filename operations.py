@@ -282,20 +282,42 @@ async def eliminar_partido_sql(session: AsyncSession, partido_id: int):
     return True
 
 
-async def actualizar_partidos(
-    session: AsyncSession,
-    partido_id: int,
-    nueva_fase: str
-):
+async def actualizar_partido_sql(session: AsyncSession, partido_id: int, datos_actualizados: Dict[str, Any]) -> \
+Optional[PartidoSQL]:
+    print(f"DEBUG (operations): Intentando actualizar partido con ID: {partido_id}")
     partido = await session.get(PartidoSQL, partido_id)
-    if not partido:
-        raise HTTPException(status_code=404, detail="Partido no encontrado")
 
-    partido.fase = nueva_fase
+    if not partido:
+        print(f"DEBUG (operations): Partido con ID {partido_id} no encontrado para actualizar.")
+        return None
+
+    # Actualizar los campos del partido con los datos proporcionados
+    for key, value in datos_actualizados.items():
+        if hasattr(partido, key) and key not in ['id', 'equipo_local_id', 'equipo_visitante_id', 'equipo_local',
+                                                 'equipo_visitante', 'fecha']:
+            if key == 'fase':
+                # Convertir el string de vuelta al enum Fases
+                if value in [fase.value for fase in Fases]:
+                    setattr(partido, key, Fases(value))
+                else:
+                    print(f"ADVERTENCIA: Valor de fase inválido '{value}' para el partido {partido_id}.")
+                    continue  # Saltar este campo si la fase no es válida
+            elif key == 'fecha':  # Si decides permitir cambiar la fecha
+                # Asegúrate de que la fecha se formatee correctamente si viene como string
+                try:
+                    setattr(partido, key, datetime.strptime(value, '%Y-%m-%d').date())
+                except ValueError:
+                    print(f"ADVERTENCIA: Formato de fecha inválido '{value}' para el partido {partido_id}.")
+                    continue
+            else:
+                setattr(partido, key, value)
+
     session.add(partido)
     await session.commit()
-    await session.refresh(partido)
+    await session.refresh(
+        partido)
 
+    print(f"DEBUG (operations): Partido con ID {partido_id} actualizado exitosamente.")
     return partido
 
 
