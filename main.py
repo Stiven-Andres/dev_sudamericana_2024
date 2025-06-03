@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Request, UploadFile, File, Form
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from shutil import copyfileobj
@@ -40,6 +40,20 @@ async def mostrar_inicio(request: Request):
 async def formulario_equipo(request: Request):
     return templates.TemplateResponse("formulario_equipo.html", {"request": request})
 
+@app.get("/formulario_equipo", response_class=HTMLResponse)
+async def mostrar_formulario_equipo(request: Request):
+    return templates.TemplateResponse("formulario_equipo.html", {"request": request})
+
+@app.get("/equipo-agregado", name="mostrar_equipo_agregado", response_class=HTMLResponse)
+async def mostrar_equipo_agregado(request: Request, nombre: str, grupo: str, pais: str, logo_url: str):
+    return templates.TemplateResponse("equipo_agregado.html", {
+        "request": request,
+        "nombre": nombre,
+        "grupo": grupo,
+        "pais": pais,
+        "logo_url": logo_url,
+    })
+
 
 @app.get("/equipos-html", response_class=HTMLResponse)
 async def mostrar_equipos(request: Request, session: AsyncSession = Depends(get_session)):
@@ -73,8 +87,9 @@ async def lanzar_error():
 
 
 # ----------- EQUIPOS --------------
-@app.post("/equipos/", response_model=EquipoSQL)
+@app.post("/equipos/", response_class=HTMLResponse)
 async def crear_equipo_con_logo(
+    request: Request,
     nombre: str = Form(...),
     pais: str = Form(...),
     grupo: str = Form(...),
@@ -102,7 +117,7 @@ async def crear_equipo_con_logo(
         pais=pais,
         grupo=grupo,
         puntos=puntos,
-        logo_url=f"img/{nombre_archivo}",  # ruta relativa desde /static
+        logo_url=f"img/{nombre_archivo}",
         tarjetas_amarillas=0,
         tarjetas_rojas=0,
         tiros_esquina=0,
@@ -114,7 +129,16 @@ async def crear_equipo_con_logo(
         pases=0
     )
 
-    return await create_equipo_sql(session, equipo_db)
+    # Guardar en base de datos
+    await create_equipo_sql(session, equipo_db)
+
+    # Redireccionar al HTML con modal
+    url = str(request.url_for("mostrar_equipo_agregado")) + \
+          f"?nombre={nombre}&grupo={grupo}&pais={pais}&logo_url={equipo_db.logo_url}"
+
+    return RedirectResponse(url=url, status_code=303)
+
+
 
 
 @app.get("/equipos/", response_model=List[EquipoSQL])

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Modal manual estático (no se cierra solo) -->
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">✅ Equipo añadido con éxito</h5>
+        <button type="button" class="btn-close" onclick="cerrarModal()" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img src="{{ url_for('static', path=logo_url) }}" alt="Logo del equipo" class="img-fluid mb-3" style="max-height: 100px;">
+        <p><strong>Nombre:</strong> {{ nombre }}</p>
+        <p><strong>Grupo:</strong> {{ grupo }}</p>
+        <p><strong>País:</strong> {{ pais }}</p>
+      </div>
+      <div class="modal-footer">
+        <a href="{{ url_for('mostrar_equipos') }}" class="btn btn-success">Ver todos los equipos</a>
+        <a href="{{ url_for('mostrar_formulario_equipo') }}" class="btn btn-secondary">Agregar otro</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function cerrarModal() {
+    document.querySelector('.modal').classList.remove('show');
+    document.querySelector('.modal').classList.add('d-none');
+  }
+</script>
+{% endblock %}
