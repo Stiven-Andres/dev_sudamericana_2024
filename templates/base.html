@@ -5,65 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>{% block title %}Copa Sudamericana{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='assets/favicon.ico') }}" />
-    <!-- Bootstrap icons-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet" />
-    <!-- Core theme CSS (includes Bootstrap)-->
     <link href="{{ url_for('static', path='css/styles.css') }}" rel="stylesheet" />
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container px-lg-5">
-        <a class="navbar-brand" href="{{ url_for('mostrar_inicio') }}">Copa Sudamericana</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('mostrar_inicio') }}">Inicio</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('mostrar_equipos') }}">Equipos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('mostrar_formulario_equipo') }}">Nuevo Equipo</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('mostrar_formulario_partido') }}">Añadir Partido</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('mostrar_partidos') }}">Ver Partidos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('mostrar_formulario_actualizar_equipo') }}">Actualizar Equipo</a>
-                </li>
-                <li class="nav-item"> {# ¡Añade esta línea! #}
-                    <a class="nav-link" href="{{ url_for('mostrar_formulario_buscar_equipo') }}">Buscar Equipo</a>
-                </li>
-            </ul>
+        <div class="container px-lg-5"> {# Agregado de nuevo el container #}
+            <a class="navbar-brand" href="{{ url_for('mostrar_inicio') }}">Copa Sudamericana</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('mostrar_inicio') }}">Inicio</a>
+                    </li>
+
+                    {# Menú Desplegable para Equipos #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownEquipos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Equipos
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownEquipos">
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_equipos') }}">Ver Todos</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_equipo') }}">Nuevo Equipo</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_actualizar_equipo') }}">Actualizar Equipo</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_equipo') }}">Buscar Equipo</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_eliminar_equipo') }}">Eliminar Equipo</a></li>
+                        </ul>
+                    </li>
+
+                    {# Menú Desplegable para Partidos #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownPartidos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Partidos
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownPartidos">
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_partidos') }}">Ver Todos</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_partido') }}">Añadir Partido</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_partido') }}">Buscar Partido</a></li>
+                            {# Puedes añadir aquí otras funcionalidades de partido como actualizar/eliminar si las implementas #}
+                        </ul>
+                    </li>
+
+                </ul>
+            </div>
         </div>
-    </div>
     </nav>
 
-    <!-- Contenido principal -->
+
     <main class="py-5">
         <div class="container px-lg-5">
             {% block content %}{% endblock %}
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="py-5 bg-dark">
         <div class="container">
             <p class="m-0 text-center text-white">© Copa Sudamericana 2025</p>
         </div>
     </footer>
 
-    <!-- Bootstrap core JS-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Core theme JS-->
     <script src="{{ url_for('static', path='js/scripts.js') }}"></script>
 </body>
 </html>

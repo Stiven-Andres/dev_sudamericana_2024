@@ -11,6 +11,8 @@
       <div class="card shadow-sm border-success">
         <div class="card-body">
           <h5 class="card-title text-center">Fase: {{ partido.fase }}</h5>
+          <p class="card-text text-center text-muted">ID del Partido: {{ partido.id }}</p> {# <-- ¡Añade esta línea! #}
+
           <p class="card-text text-center text-muted">{{ partido.created_at.strftime('%Y-%m-%d %H:%M') }}</p> {# Formato de fecha #}
           <hr>
           <div class="row text-center align-items-center">

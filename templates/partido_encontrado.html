@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">🔍 Datos del Partido: ID {{ partido.id }}</h5>
+      </div>
+      <div class="modal-body text-center">
+        {% if partido %}
+          <p><strong>ID del Partido:</strong> {{ partido.id }}</p>
+          <p><strong>Fase:</strong> {{ partido.fase }}</p>
+          <p><strong>Fecha:</strong> {{ partido.fecha }}</p>
+          <hr>
+          <h6>Equipos y Goles:</h6>
+          <p><strong>{{ partido.equipo_local.nombre }}</strong> {{ partido.goles_local }} - {{ partido.goles_visitante }} <strong>{{ partido.equipo_visitante.nombre }}</strong></p>
+          <hr>
+          <h6>Estadísticas Detalladas:</h6>
+          <div class="row">
+            <div class="col-md-6 text-start">
+              <strong>{{ partido.equipo_local.nombre }} (Local)</strong>
+              <ul>
+                <li>Tarjetas Amarillas: {{ partido.tarjetas_amarillas_local }}</li>
+                <li>Tarjetas Rojas: {{ partido.tarjetas_rojas_local }}</li>
+                <li>Faltas: {{ partido.faltas_local }}</li>
+                <li>Fuera de Juego: {{ partido.fueras_de_juego_local }}</li>
+                <li>Tiros de Esquina: {{ partido.tiros_esquina_local }}</li>
+                <li>Tiros Libres: {{ partido.tiros_libres_local }}</li>
+                <li>Pases: {{ partido.pases_local }}</li>
+              </ul>
+            </div>
+            <div class="col-md-6 text-start">
+              <strong>{{ partido.equipo_visitante.nombre }} (Visitante)</strong>
+              <ul>
+                <li>Tarjetas Amarillas: {{ partido.tarjetas_amarillas_visitante }}</li>
+                <li>Tarjetas Rojas: {{ partido.tarjetas_rojas_visitante }}</li>
+                <li>Faltas: {{ partido.faltas_visitante }}</li>
+                <li>Fuera de Juego: {{ partido.fueras_de_juego_visitante }}</li>
+                <li>Tiros de Esquina: {{ partido.tiros_esquina_visitante }}</li>
+                <li>Tiros Libres: {{ partido.tiros_libres_visitante }}</li>
+                <li>Pases: {{ partido.pases_visitante }}</li>
+              </ul>
+            </div>
+          </div>
+        {% else %}
+          <p class="text-danger h4">Partido no encontrado.</p>
+          <p>El ID de partido ingresado no corresponde a ningún partido registrado.</p>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <a href="{{ url_for('mostrar_partidos') }}" class="btn btn-primary">Ver todos los partidos</a>
+        <a href="{{ url_for('mostrar_formulario_buscar_partido') }}" class="btn btn-secondary">Buscar otro partido</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -73,10 +73,8 @@ async def buscar_equipo_html(
     session: AsyncSession = Depends(get_session) # Inyecta la sesión aquí también
 ):
     try:
-        # LLAMADA A LA NUEVA FUNCIÓN DE OPERATIONS.PY
         equipo = await obtener_equipo_y_manejar_error(session, equipo_id)
 
-        # Si la función no lanzó una excepción, el equipo fue encontrado
         return templates.TemplateResponse(
             "equipo_encontrado.html",
             {
@@ -85,15 +83,13 @@ async def buscar_equipo_html(
             }
         )
     except HTTPException as e:
-        # Captura la excepción lanzada por obtener_equipo_y_manejar_error
-        # y renderiza el formulario con el mensaje de error.
         equipos = await obtener_todos_los_equipos(session)
         return templates.TemplateResponse(
             "formulario_buscar_equipo.html",
             {"request": request, "equipos": equipos, "error_message": e.detail}
         )
     except Exception as e:
-        # Para cualquier otro error inesperado
+
         equipos = await obtener_todos_los_equipos(session)
         return templates.TemplateResponse(
             "formulario_buscar_equipo.html",
@@ -115,8 +111,7 @@ async def actualizar_equipo_html(
                 nuevo_grupo=nuevo_grupo,
                 nuevos_puntos=nuevos_puntos
             )
-            # --- CAMBIO AQUÍ ---
-            # En lugar de redirigir, renderiza la plantilla de confirmación con los datos del equipo
+
             return templates.TemplateResponse(
                 "equipo_actualizado.html",
                 {
@@ -128,7 +123,7 @@ async def actualizar_equipo_html(
                     "logo_url": equipo_actualizado.logo_url
                 }
             )
-            # --- FIN DEL CAMBIO ---
+
         except HTTPException as e:
             equipos = await obtener_todos_los_equipos(session)
             return templates.TemplateResponse(
@@ -139,6 +134,101 @@ async def actualizar_equipo_html(
             raise HTTPException(status_code=500, detail=f"Error interno del servidor: {e}")
 
 
+@app.get("/formulario-eliminar-equipo", response_class=HTMLResponse)
+async def mostrar_formulario_eliminar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
+    equipos = await obtener_todos_los_equipos(session)  # Necesitamos la lista de equipos para el select
+    return templates.TemplateResponse("formulario_eliminar_equipo.html", {"request": request, "equipos": equipos})
+
+
+@app.get("/formulario-buscar-partido/", response_class=HTMLResponse)
+async def mostrar_formulario_buscar_partido(request: Request, session: AsyncSession = Depends(get_session)):
+    # No necesitamos cargar equipos para este formulario, solo el ID
+    return templates.TemplateResponse("formulario_buscar_partido.html", {"request": request})
+
+
+@app.post("/buscar-partido/", response_class=HTMLResponse)
+async def buscar_partido_html(
+        request: Request,
+        partido_id: int = Form(...),
+        session: AsyncSession = Depends(get_session)
+):
+    print(f"DEBUG (main): POST /buscar-partido/ recibido. ID del formulario: '{partido_id}' (tipo: {type(partido_id)})")
+
+    partido_encontrado = None
+    try:
+        partido_encontrado = await obtener_partido_por_id(session, partido_id)
+        if not partido_encontrado:
+            raise HTTPException(status_code=404, detail=f"Partido con ID '{partido_id}' no encontrado.")
+
+        print(f"DEBUG (main): Partido encontrado: {partido_encontrado.id}, Fase: {partido_encontrado.fase}")
+        return templates.TemplateResponse(
+            "partido_encontrado.html",
+            {"request": request, "partido": partido_encontrado}
+        )
+    except HTTPException as e:
+        print(f"DEBUG (main): HTTPException capturada: {e.detail}")
+        return templates.TemplateResponse(
+            "formulario_buscar_partido.html",
+            {"request": request, "error_message": e.detail}
+        )
+    except Exception as e:
+        print(f"DEBUG (main): ERROR INESPERADO al buscar partido: {e}")
+        return templates.TemplateResponse(
+            "formulario_buscar_partido.html",
+            {"request": request, "error_message": f"Error interno del servidor: {e}"}
+        )
+
+
+@app.post("/eliminar-equipo/", response_class=HTMLResponse)
+async def eliminar_equipo_html(
+    request: Request,
+    equipo_id: int = Form(...),
+    session: AsyncSession = Depends(get_session)
+):
+    print(f"DEBUG (main): POST /eliminar-equipo/ recibido. ID del formulario: '{equipo_id}' (tipo: {type(equipo_id)})")
+
+    equipo_a_eliminar_temp = None # Para guardar los datos del equipo antes de borrarlo
+    try:
+        # Primero, obtener los datos del equipo para mostrarlos en el modal de confirmación
+        # Si el equipo no existe, la función ya lanzará una HTTPException
+        print(f"DEBUG (main): Llamando a obtener_equipo_y_manejar_error para ID: {equipo_id}")
+        equipo_a_eliminar_temp = await obtener_equipo_y_manejar_error(session, equipo_id)
+        print(f"DEBUG (main): Equipo encontrado en operations: {equipo_a_eliminar_temp.nombre} (ID: {equipo_a_eliminar_temp.id})")
+
+        # Luego, proceder con la eliminación
+        print(f"DEBUG (main): Llamando a eliminar_equipo_sql para ID: {equipo_id}")
+        await eliminar_equipo_sql(session, equipo_id)
+        print(f"DEBUG (main): Equipo eliminado exitosamente en operations.")
+
+        # Si la eliminación fue exitosa, renderiza el modal de confirmación
+        return templates.TemplateResponse(
+            "equipo_eliminado.html",
+            {
+                "request": request,
+                "eliminado_exitosamente": True, # Asegúrate de pasar esto si tu HTML lo espera
+                "nombre": equipo_a_eliminar_temp.nombre,
+                "id": equipo_a_eliminar_temp.id,
+                "logo_url": equipo_a_eliminar_temp.logo_url,
+                "pais": equipo_a_eliminar_temp.pais, # Añadir esto para el modal, si es necesario
+                "grupo": equipo_a_eliminar_temp.grupo # Añadir esto para el modal, si es necesario
+            }
+        )
+    except HTTPException as e:
+        print(f"DEBUG (main): HTTPException capturada: {e.detail}")
+        # Captura la excepción lanzada si el equipo no se encuentra
+        equipos = await obtener_todos_los_equipos(session)
+        return templates.TemplateResponse(
+            "formulario_eliminar_equipo.html",
+            {"request": request, "equipos": equipos, "error_message": e.detail}
+        )
+    except Exception as e:
+        print(f"DEBUG (main): ERROR INESPERADO: {e}")
+        # Para cualquier otro error inesperado
+        equipos = await obtener_todos_los_equipos(session)
+        return templates.TemplateResponse(
+            "formulario_eliminar_equipo.html",
+            {"request": request, "equipos": equipos, "error_message": f"Error interno del servidor: {e}"}
+        )
 
 @app.get("/partido/formulario", response_class=HTMLResponse)
 async def mostrar_formulario_partido(request: Request, session: AsyncSession = Depends(get_session)):
@@ -152,7 +242,6 @@ async def mostrar_equipos(request: Request, session: AsyncSession = Depends(get_
     return templates.TemplateResponse("equipos.html", {"request": request, "equipos": equipos})
 
 
-# NUEVA RUTA para mostrar todos los partidos en un template HTML
 @app.get("/partidos/", response_class=HTMLResponse)
 async def mostrar_partidos(request: Request, session: AsyncSession = Depends(get_session)):
     partidos = await obtener_todos_los_partidos(session)

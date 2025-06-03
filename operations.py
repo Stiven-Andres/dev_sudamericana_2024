@@ -113,13 +113,13 @@ async def actualizar_datos_equipo(
     return equipo
 
 
-async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
-    query = select(EquipoSQL).where(EquipoSQL.id == equipo_id)
-    result = await session.execute(query)
-    equipo = result.scalar_one_or_none()
+async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int) -> bool:
+    equipo = await session.get(EquipoSQL, equipo_id)
+    if not equipo:
+        return False # El equipo no existe
 
-    if equipo is None:
-        return False
+
+    raise HTTPException(status_code=404, detail="Equipo no encontrado para eliminar.")
 
     await session.delete(equipo)
     await session.commit()
@@ -127,10 +127,33 @@ async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
 
 
 async def obtener_equipo_y_manejar_error(session: AsyncSession, equipo_id: int) -> EquipoSQL:
+    print(f"DEBUG (operations): obtener_equipo_y_manejar_error - Recibido ID: '{equipo_id}' (tipo: {type(equipo_id)})")
+
+
+    if not isinstance(equipo_id, int):
+        print(f"ERROR (operations): equipo_id no es un entero: {equipo_id}")
+        raise HTTPException(status_code=400, detail="ID de equipo inválido.")
+
     equipo = await session.get(EquipoSQL, equipo_id)
+
     if not equipo:
+        print(f"DEBUG (operations): Equipo con ID '{equipo_id}' NO ENCONTRADO en la DB.")
         raise HTTPException(status_code=404, detail="Equipo no encontrado con ese ID.")
+
+    print(f"DEBUG (operations): Equipo con ID '{equipo_id}' ENCONTRADO: {equipo.nombre}.")
     return equipo
+
+
+async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
+    print(f"DEBUG (operations): eliminar_equipo_sql - Iniciando eliminación para ID: {equipo_id}")
+
+    equipo = await obtener_equipo_y_manejar_error(session, equipo_id)
+
+
+    await session.delete(equipo)
+    await session.commit()
+    print(f"DEBUG (operations): Equipo con ID '{equipo_id}' eliminado y cambios committeados.")
+    return True
 # --------------------------------------------------------- operations Partido -----------------------------------------------------------------------------
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
@@ -192,10 +215,25 @@ async def obtener_todos_los_partidos(session: AsyncSession) -> List[PartidoSQL]:
     return result.scalars().all()
 
 
-async def obtener_partido_por_id(session: AsyncSession, partido_id: int):
-    query = select(PartidoSQL).where(PartidoSQL.id == partido_id)
-    result = await session.execute(query)
-    return result.scalar_one_or_none()
+async def obtener_partido_por_id(session: AsyncSession, partido_id: int) -> Optional[PartidoSQL]:
+    """
+    Obtiene un partido por su ID, cargando los objetos de equipo local y visitante.
+    """
+    print(f"DEBUG (operations): Buscando partido con ID: {partido_id}")
+    result = await session.execute(
+        select(PartidoSQL)
+        .where(PartidoSQL.id == partido_id)
+        .options(
+            selectinload(PartidoSQL.equipo_local),
+            selectinload(PartidoSQL.equipo_visitante)
+        )
+    )
+    partido = result.scalar_one_or_none()
+    if partido:
+        print(f"DEBUG (operations): Partido encontrado: ID {partido.id}, Fase {partido.fase}")
+    else:
+        print(f"DEBUG (operations): Partido con ID {partido_id} no encontrado.")
+    return partido
 
 
 
