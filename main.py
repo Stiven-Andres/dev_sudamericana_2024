@@ -406,6 +406,54 @@ async def procesar_modificacion_partido(
             }
         )
 
+
+@app.get("/formulario-eliminar-partido/", response_class=HTMLResponse)
+async def mostrar_formulario_eliminar_partido(request: Request, session: AsyncSession = Depends(get_session)):
+    """
+    Muestra el formulario para eliminar un partido, con una lista de todos los partidos.
+    """
+    # Obtener todos los partidos para el selector, cargando equipos para nombres
+    partidos = await obtener_todos_los_partidos(session)
+    return templates.TemplateResponse("formulario_eliminar_partido.html", {"request": request, "partidos": partidos})
+
+
+@app.post("/eliminar-partido/", response_class=HTMLResponse)
+async def procesar_eliminar_partido(
+        request: Request,
+        partido_id: int = Form(...),
+        session: AsyncSession = Depends(get_session)
+):
+    """
+    Procesa la eliminación de un partido.
+    """
+    print(f"DEBUG (main): POST /eliminar-partido/ recibido. ID del partido a eliminar: {partido_id}")
+    eliminado_exitosamente = False
+    try:
+        eliminado_exitosamente = await eliminar_partido_sql(session, partido_id)
+        if not eliminado_exitosamente:
+            raise HTTPException(status_code=404, detail=f"Partido con ID '{partido_id}' no encontrado.")
+
+        print(f"DEBUG (main): Partido {partido_id} eliminado exitosamente.")
+        return templates.TemplateResponse(
+            "partido_eliminado.html",
+            {"request": request, "eliminado_exitosamente": True, "partido_id": partido_id}
+        )
+    except HTTPException as e:
+        print(f"DEBUG (main): HTTPException al eliminar partido: {e.detail}")
+        return templates.TemplateResponse(
+            "partido_eliminado.html",
+            {"request": request, "eliminado_exitosamente": False, "partido_id": partido_id, "error_message": e.detail}
+        )
+    except Exception as e:
+        print(f"DEBUG (main): ERROR INESPERADO al eliminar partido: {e}")
+        return templates.TemplateResponse(
+            "partido_eliminado.html",
+            {"request": request, "eliminado_exitosamente": False, "partido_id": partido_id,
+             "error_message": f"Error interno del servidor: {e}"}
+        )
+
+
+
 # ----------- OTROS --------------
 @app.get("/")
 async def root():

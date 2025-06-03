@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">🗑️ Partido Eliminado</h5>
+      </div>
+      <div class="modal-body text-center">
+        {% if eliminado_exitosamente %}
+          <p class="text-success h4">¡Partido eliminado con éxito!</p>
+          <p>El partido (ID: <strong>{{ partido_id }}</strong>) ha sido eliminado.</p>
+        {% else %}
+          <p class="text-danger h4">No se pudo eliminar el partido.</p>
+          <p>Hubo un problema al intentar eliminar el partido (ID: <strong>{{ partido_id }}</strong>). Por favor, inténtalo de nuevo.</p>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <a href="{{ url_for('mostrar_partidos') }}" class="btn btn-primary">Ver todos los partidos</a>
+        <a href="{{ url_for('mostrar_formulario_eliminar_partido') }}" class="btn btn-secondary">Eliminar otro partido</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

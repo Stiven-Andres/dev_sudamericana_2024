@@ -57,6 +57,8 @@ class EquipoSQL(SQLModel, table=True):
     fueras_de_juego: int = Field(default=0, ge=0)
     pases: int = Field(default=0, ge=0)
 
+
+
     # Añade estas relaciones inversas, especificando qué columna de PartidoSQL
     # apunta a este equipo cuando es local y cuando es visitante.
     partidos_como_local: List["PartidoSQL"] = Relationship(

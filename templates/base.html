@@ -46,8 +46,9 @@
                             <li><a class="dropdown-item" href="{{ url_for('mostrar_partidos') }}">Ver Todos</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_partido') }}">Añadir Partido</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_partido') }}">Buscar Partido</a></li>
-                            <li><hr class="dropdown-divider"></li> {# Separador #}
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_modificar_partido') }}">Modificar Partido</a></li> {# <-- ¡Añade esta línea! #}
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_modificar_partido') }}">Modificar Partido</a></li>
+                            <li><hr class="dropdown-divider"></li> {# Nuevo separador #}
+                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_eliminar_partido') }}">Eliminar Partido</a></li> {# <-- ¡Añade esta línea! #}
                         </ul>
                     </li>
 

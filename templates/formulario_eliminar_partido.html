@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar Partido{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center text-danger">Eliminar Partido</h1>
+    <p class="text-center text-muted">¡Cuidado! Esta acción es irreversible.</p>
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <form action="/eliminar-partido/" method="post" class="needs-validation" novalidate>
+        <div class="mb-3">
+            <label for="partido_id" class="form-label">Selecciona el Partido a Eliminar:</label>
+            <select class="form-select" id="partido_id" name="partido_id" required>
+                <option value="">Selecciona un partido...</option>
+                {% for partido in partidos %}
+                <option value="{{ partido.id }}">
+                    ID: {{ partido.id }} | {{ partido.equipo_local.nombre }} vs {{ partido.equipo_visitante.nombre }} | Fase: {{ partido.fase }} | Fecha: {{ partido.fecha }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Por favor, selecciona un partido.
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-danger">Eliminar Partido</button>
+    </form>
+</div>
+{% endblock %}
