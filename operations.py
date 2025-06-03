@@ -57,6 +57,7 @@ async def create_equipo_sql(session: AsyncSession, equipo: EquipoSQL):
 
 
 
+
 async def obtener_todos_los_equipos(session: AsyncSession):
     query = select(EquipoSQL)
     result = await session.execute(query)
@@ -124,6 +125,12 @@ async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
     await session.commit()
     return True
 
+
+async def obtener_equipo_y_manejar_error(session: AsyncSession, equipo_id: int) -> EquipoSQL:
+    equipo = await session.get(EquipoSQL, equipo_id)
+    if not equipo:
+        raise HTTPException(status_code=404, detail="Equipo no encontrado con ese ID.")
+    return equipo
 # --------------------------------------------------------- operations Partido -----------------------------------------------------------------------------
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):

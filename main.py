@@ -61,6 +61,45 @@ async def mostrar_formulario_actualizar_equipo(request: Request, session: AsyncS
     equipos = await obtener_todos_los_equipos(session)
     return templates.TemplateResponse("formulario_actualizar_equipo.html", {"request": request, "equipos": equipos})
 
+@app.get("/formulario-buscar-equipo", response_class=HTMLResponse)
+async def mostrar_formulario_buscar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
+    equipos = await obtener_todos_los_equipos(session) # Se usa para el select del formulario
+    return templates.TemplateResponse("formulario_buscar_equipo.html", {"request": request, "equipos": equipos})
+
+@app.post("/buscar-equipo/", response_class=HTMLResponse)
+async def buscar_equipo_html(
+    request: Request,
+    equipo_id: int = Form(...),
+    session: AsyncSession = Depends(get_session) # Inyecta la sesión aquí también
+):
+    try:
+        # LLAMADA A LA NUEVA FUNCIÓN DE OPERATIONS.PY
+        equipo = await obtener_equipo_y_manejar_error(session, equipo_id)
+
+        # Si la función no lanzó una excepción, el equipo fue encontrado
+        return templates.TemplateResponse(
+            "equipo_encontrado.html",
+            {
+                "request": request,
+                "equipo": equipo
+            }
+        )
+    except HTTPException as e:
+        # Captura la excepción lanzada por obtener_equipo_y_manejar_error
+        # y renderiza el formulario con el mensaje de error.
+        equipos = await obtener_todos_los_equipos(session)
+        return templates.TemplateResponse(
+            "formulario_buscar_equipo.html",
+            {"request": request, "equipos": equipos, "error_message": e.detail}
+        )
+    except Exception as e:
+        # Para cualquier otro error inesperado
+        equipos = await obtener_todos_los_equipos(session)
+        return templates.TemplateResponse(
+            "formulario_buscar_equipo.html",
+            {"request": request, "equipos": equipos, "error_message": f"Error interno del servidor: {e}"}
+        )
+
 @app.post("/actualizar-equipo/", response_class=HTMLResponse)
 async def actualizar_equipo_html(
     request: Request,

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">🔍 Datos del Equipo: {{ equipo.nombre }}</h5>
+      </div>
+      <div class="modal-body text-center">
+        {% if equipo.logo_url %}
+        <img src="{{ url_for('static', path=equipo.logo_url) }}" alt="Logo de {{ equipo.nombre }}" class="img-fluid mb-3" style="max-height: 100px;">
+        {% endif %}
+        <p><strong>ID:</strong> {{ equipo.id }}</p>
+        <p><strong>Nombre:</strong> {{ equipo.nombre }}</p>
+        <p><strong>País:</strong> {{ equipo.pais }}</p>
+        <p><strong>Grupo:</strong> {{ equipo.grupo }}</p>
+        <p><strong>Puntos:</strong> {{ equipo.puntos }}</p>
+        <hr>
+        <h6>Estadísticas:</h6>
+        <p><strong>Goles a favor:</strong> {{ equipo.goles_a_favor }}</p>
+        <p><strong>Goles en contra:</strong> {{ equipo.goles_en_contra }}</p>
+        <p><strong>Tarjetas Amarillas:</strong> {{ equipo.tarjetas_amarillas }}</p>
+        <p><strong>Tarjetas Rojas:</strong> {{ equipo.tarjetas_rojas }}</p>
+        <p><strong>Faltas:</strong> {{ equipo.faltas }}</p>
+        <p><strong>Fueras de Juego:</strong> {{ equipo.fueras_de_juego }}</p>
+        <p><strong>Pases:</strong> {{ equipo.pases }}</p>
+      </div>
+      <div class="modal-footer">
+        <a href="{{ url_for('mostrar_formulario_buscar_equipo') }}" class="btn btn-secondary">Buscar otro equipo</a>
+        <a href="{{ url_for('mostrar_equipos') }}" class="btn btn-primary">Ver todos los equipos</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
