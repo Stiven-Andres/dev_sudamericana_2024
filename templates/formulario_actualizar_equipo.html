@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Actualizar Equipo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Actualizar Puntos y Grupo de un Equipo</h1>
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <form action="/actualizar-equipo/" method="post" class="needs-validation" novalidate>
+        <div class="mb-3">
+            <label for="equipo_id" class="form-label">Selecciona el Equipo:</label>
+            <select class="form-select" id="equipo_id" name="equipo_id" required>
+                <option value="">Selecciona un equipo...</option>
+                {% for equipo in equipos %}
+                <option value="{{ equipo.id }}">{{ equipo.nombre }} ({{ equipo.pais }} - Grupo: {{ equipo.grupo }})</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Por favor, selecciona un equipo.
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="nuevo_grupo" class="form-label">Nuevo Grupo:</label>
+            <input type="text" class="form-control" id="nuevo_grupo" name="nuevo_grupo" placeholder="Ej: Grupo C" required minlength="1" maxlength="10">
+            <div class="invalid-feedback">
+                Por favor, ingresa el nuevo grupo (1-10 caracteres).
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="nuevos_puntos" class="form-label">Nuevos Puntos:</label>
+            <input type="number" class="form-control" id="nuevos_puntos" name="nuevos_puntos" placeholder="Ej: 15" required min="0">
+            <div class="invalid-feedback">
+                Por favor, ingresa los nuevos puntos (mínimo 0).
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Actualizar Equipo</button>
+    </form>
+</div>
+{% endblock %}

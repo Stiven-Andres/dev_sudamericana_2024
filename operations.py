@@ -4,10 +4,11 @@ from sqlalchemy import update
 from fastapi import HTTPException
 from models import *
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from sqlmodel import Session
 from sqlalchemy import func, text
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.orm import selectinload # Asegúrate de importar esto
 
 def normalizar_nombre(nombre: str) -> str:
     nombre = nombre.lower()
@@ -67,6 +68,28 @@ async def obtener_equipo_por_id(session: AsyncSession, equipo_id: int):
     result = await session.execute(query)
     return result.scalar_one_or_none()
 
+async def actualizar_grupo_y_puntos_equipo(
+    session: AsyncSession,
+    equipo_id: int,
+    nuevo_grupo: str,
+    nuevos_puntos: int
+) -> EquipoSQL:
+    """
+    Actualiza el grupo y los puntos de un equipo específico.
+    """
+    equipo = await session.get(EquipoSQL, equipo_id)
+
+    if not equipo:
+        raise HTTPException(status_code=404, detail="Equipo no encontrado.")
+
+    equipo.grupo = nuevo_grupo
+    equipo.puntos = nuevos_puntos
+
+    session.add(equipo)
+    await session.commit()
+    await session.refresh(equipo)
+    return equipo
+
 async def actualizar_datos_equipo(
     session: AsyncSession,
     equipo_id: int,
@@ -104,21 +127,6 @@ async def eliminar_equipo_sql(session: AsyncSession, equipo_id: int):
 # --------------------------------------------------------- operations Partido -----------------------------------------------------------------------------
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
-    # Verificación de ID válido
-    if partido.id is None or partido.id <= 0:
-        raise HTTPException(status_code=400, detail="El ID del partido debe ser mayor que 0")
-
-    # Verificar si el partido ya existe
-    existente = await session.get(PartidoSQL, partido.id)
-    if existente:
-        raise HTTPException(status_code=409, detail=f"Ya existe un partido con ID {partido.id}")
-
-    # ⚠️ Validar que los equipos no sean el mismo
-    if partido.equipo_local_id == partido.equipo_visitante_id:
-        raise HTTPException(status_code=400, detail="El equipo local y el equipo visitante no pueden ser el mismo")
-
-    def default(value):
-        return value if value is not None else 0
 
     partido.created_at = remove_tzinfo(partido.created_at)
     partido.updated_at = remove_tzinfo(partido.updated_at)
@@ -136,25 +144,26 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
         raise HTTPException(status_code=404, detail="Equipo local o visitante no encontrado")
 
     # Actualizar estadísticas
-    local.tarjetas_amarillas += default(partido.tarjetas_amarillas_local)
-    local.tarjetas_rojas += default(partido.tarjetas_rojas_local)
-    local.tiros_esquina += default(partido.tiros_esquina_local)
-    local.tiros_libres += default(partido.tiros_libres_local)
-    local.goles_a_favor += default(partido.goles_local)
-    local.goles_en_contra += default(partido.goles_visitante)
-    local.faltas += default(partido.faltas_local)
-    local.fueras_de_juego += default(partido.fueras_de_juego_local)
-    local.pases += default(partido.pases_local)
+    local.goles_a_favor += partido.goles_local
+    local.goles_en_contra += partido.goles_visitante
+    local.tarjetas_amarillas += partido.tarjetas_amarillas_local or 0  # CORREGIDO
+    local.tarjetas_rojas += partido.tarjetas_rojas_local or 0  # CORREGIDO
+    local.tiros_esquina += partido.tiros_esquina_local or 0  # CORREGIDO
+    local.tiros_libres += partido.tiros_libres_local or 0  # CORREGIDO
+    local.faltas += partido.faltas_local or 0  # CORREGIDO
+    local.fueras_de_juego += partido.fueras_de_juego_local or 0  # CORREGIDO
+    local.pases += partido.pases_local or 0  # CORREGIDO
 
-    visitante.tarjetas_amarillas += default(partido.tarjetas_amarillas_visitante)
-    visitante.tarjetas_rojas += default(partido.tarjetas_rojas_visitante)
-    visitante.tiros_esquina += default(partido.tiros_esquina_visitante)
-    visitante.tiros_libres += default(partido.tiros_libres_visitante)
-    visitante.goles_a_favor += default(partido.goles_visitante)
-    visitante.goles_en_contra += default(partido.goles_local)
-    visitante.faltas += default(partido.faltas_visitante)
-    visitante.fueras_de_juego += default(partido.fueras_de_juego_visitante)
-    visitante.pases += default(partido.pases_visitante)
+    # Actualizar estadísticas del equipo visitante
+    visitante.goles_a_favor += partido.goles_visitante
+    visitante.goles_en_contra += partido.goles_local
+    visitante.tarjetas_amarillas += partido.tarjetas_amarillas_visitante or 0  # CORREGIDO
+    visitante.tarjetas_rojas += partido.tarjetas_rojas_visitante or 0  # CORREGIDO
+    visitante.tiros_esquina += partido.tiros_esquina_visitante or 0  # CORREGIDO
+    visitante.tiros_libres += partido.tiros_libres_visitante or 0  # CORREGIDO
+    visitante.faltas += partido.faltas_visitante or 0  # CORREGIDO
+    visitante.fueras_de_juego += partido.fueras_de_juego_visitante or 0  # CORREGIDO
+    visitante.pases += partido.pases_visitante or 0
 
     session.add(local)
     session.add(visitante)
@@ -165,9 +174,14 @@ async def create_partido_sql(session: AsyncSession, partido: PartidoSQL):
 
 
 
-async def obtener_todos_los_partidos(session: AsyncSession):
-    query = select(PartidoSQL)
-    result = await session.execute(query)
+async def obtener_todos_los_partidos(session: AsyncSession) -> List[PartidoSQL]:
+    # Cargamos los equipos relacionados (local y visitante) para acceder a sus nombres y logos
+    result = await session.execute(
+        select(PartidoSQL).options(
+            selectinload(PartidoSQL.equipo_local),
+            selectinload(PartidoSQL.equipo_visitante)
+        )
+    )
     return result.scalars().all()
 
 

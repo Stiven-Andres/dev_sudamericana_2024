@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Partidos - Copa Sudamericana{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4 text-center">Listado de Partidos</h1>
+  <div class="row">
+    {% for partido in partidos %}
+    <div class="col-md-6 mb-4"> {# Cada partido en una columna, dos por fila en pantallas medianas #}
+      <div class="card shadow-sm border-success">
+        <div class="card-body">
+          <h5 class="card-title text-center">Fase: {{ partido.fase }}</h5>
+          <p class="card-text text-center text-muted">{{ partido.created_at.strftime('%Y-%m-%d %H:%M') }}</p> {# Formato de fecha #}
+          <hr>
+          <div class="row text-center align-items-center">
+            <div class="col-5">
+              {% if partido.equipo_local.logo_url %}
+                <img src="{{ url_for('static', path=partido.equipo_local.logo_url) }}" alt="Logo {{ partido.equipo_local.nombre }}" width="50" height="50" style="object-fit: contain;">
+              {% endif %}
+              <p class="h6 mt-2">{{ partido.equipo_local.nombre }}</p>
+            </div>
+            <div class="col-2">
+              <span class="h4">{{ partido.goles_local }} - {{ partido.goles_visitante }}</span>
+            </div>
+            <div class="col-5">
+              {% if partido.equipo_visitante.logo_url %}
+                <img src="{{ url_for('static', path=partido.equipo_visitante.logo_url) }}" alt="Logo {{ partido.equipo_visitante.nombre }}" width="50" height="50" style="object-fit: contain;">
+              {% endif %}
+              <p class="h6 mt-2">{{ partido.equipo_visitante.nombre }}</p>
+            </div>
+          </div>
+          <hr>
+          <h6>Estadísticas del Partido:</h6>
+          <div class="row">
+            <div class="col-6">
+              <p><strong>Tarjetas Amarillas (Local):</strong> {{ partido.tarjetas_amarillas_local }}</p>
+              <p><strong>Tarjetas Rojas (Local):</strong> {{ partido.tarjetas_rojas_local }}</p>
+              <p><strong>Faltas (Local):</strong> {{ partido.faltas_local }}</p>
+              <p><strong>Fueras de Juego (Local):</strong> {{ partido.fueras_de_juego_local }}</p>
+              <p><strong>Tiros de Esquina (Local):</strong> {{ partido.tiros_esquina_local }}</p>
+              <p><strong>Tiros Libres (Local):</strong> {{ partido.tiros_libres_local }}</p>
+              <p><strong>Pases (Local):</strong> {{ partido.pases_local }}</p>
+            </div>
+            <div class="col-6">
+              <p><strong>Tarjetas Amarillas (Visitante):</strong> {{ partido.tarjetas_amarillas_visitante }}</p>
+              <p><strong>Tarjetas Rojas (Visitante):</strong> {{ partido.tarjetas_rojas_visitante }}</p>
+              <p><strong>Faltas (Visitante):</strong> {{ partido.faltas_visitante }}</p>
+              <p><strong>Fueras de Juego (Visitante):</strong> {{ partido.fueras_de_juego_visitante }}</p>
+              <p><strong>Tiros de Esquina (Visitante):</strong> {{ partido.tiros_esquina_visitante }}</p>
+              <p><strong>Tiros Libres (Visitante):</strong> {{ partido.tiros_libres_visitante }}</p>
+              <p><strong>Pases (Visitante):</strong> {{ partido.pases_visitante }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center">
+      <p>No hay partidos registrados aún.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

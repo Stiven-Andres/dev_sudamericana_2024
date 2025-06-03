@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Partido{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Registrar Nuevo Partido</h2>
+<form method="post" action="/partidos/">
+    <div class="row g-3">
+
+        <!-- Equipos -->
+        <div class="col-md-6">
+            <label for="equipo_local_id" class="form-label">Equipo Local</label>
+            <select class="form-select" name="equipo_local_id" required>
+                {% for equipo in equipos %}
+                    <option value="{{ equipo.id }}">{{ equipo.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label for="equipo_visitante_id" class="form-label">Equipo Visitante</label>
+            <select class="form-select" name="equipo_visitante_id" required>
+                {% for equipo in equipos %}
+                    <option value="{{ equipo.id }}">{{ equipo.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Goles -->
+        <div class="col-md-6">
+            <label for="goles_local" class="form-label">Goles Local</label>
+            <input type="number" class="form-control" name="goles_local" min="0" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="goles_visitante" class="form-label">Goles Visitante</label>
+            <input type="number" class="form-control" name="goles_visitante" min="0" required>
+        </div>
+
+        <!-- Tarjetas -->
+        <div class="col-md-6">
+            <label for="tarjetas_amarillas_local" class="form-label">Tarjetas Amarillas Local</label>
+            <input type="number" class="form-control" name="tarjetas_amarillas_local" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="tarjetas_amarillas_visitante" class="form-label">Tarjetas Amarillas Visitante</label>
+            <input type="number" class="form-control" name="tarjetas_amarillas_visitante" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="tarjetas_rojas_local" class="form-label">Tarjetas Rojas Local</label>
+            <input type="number" class="form-control" name="tarjetas_rojas_local" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="tarjetas_rojas_visitante" class="form-label">Tarjetas Rojas Visitante</label>
+            <input type="number" class="form-control" name="tarjetas_rojas_visitante" min="0" value="0">
+        </div>
+
+        <!-- Tiros -->
+        <div class="col-md-6">
+            <label for="tiros_esquina_local" class="form-label">Tiros de Esquina Local</label>
+            <input type="number" class="form-control" name="tiros_esquina_local" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="tiros_esquina_visitante" class="form-label">Tiros de Esquina Visitante</label>
+            <input type="number" class="form-control" name="tiros_esquina_visitante" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="tiros_libres_local" class="form-label">Tiros Libres Local</label>
+            <input type="number" class="form-control" name="tiros_libres_local" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="tiros_libres_visitante" class="form-label">Tiros Libres Visitante</label>
+            <input type="number" class="form-control" name="tiros_libres_visitante" min="0" value="0">
+        </div>
+
+        <!-- Faltas -->
+        <div class="col-md-6">
+            <label for="faltas_local" class="form-label">Faltas Local</label>
+            <input type="number" class="form-control" name="faltas_local" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="faltas_visitante" class="form-label">Faltas Visitante</label>
+            <input type="number" class="form-control" name="faltas_visitante" min="0" value="0">
+        </div>
+
+        <!-- Fueras de Juego -->
+        <div class="col-md-6">
+            <label for="fueras_de_juego_local" class="form-label">Fueras de Juego Local</label>
+            <input type="number" class="form-control" name="fueras_de_juego_local" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="fueras_de_juego_visitante" class="form-label">Fueras de Juego Visitante</label>
+            <input type="number" class="form-control" name="fueras_de_juego_visitante" min="0" value="0">
+        </div>
+
+        <!-- Pases -->
+        <div class="col-md-6">
+            <label for="pases_local" class="form-label">Pases Local</label>
+            <input type="number" class="form-control" name="pases_local" min="0" value="0">
+        </div>
+
+        <div class="col-md-6">
+            <label for="pases_visitante" class="form-label">Pases Visitante</label>
+            <input type="number" class="form-control" name="pases_visitante" min="0" value="0">
+        </div>
+
+        <!-- Fase -->
+        <div class="col-md-6">
+            <label for="fase" class="form-label">Fase</label>
+            <select class="form-select" name="fase">
+                {% for f in ["Play_off", "Grupos", "Octavos", "Cuartos", "Semifinal", "Final"] %}
+                    <option value="{{ f }}">{{ f }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-success">Registrar Partido</button>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">✅ Equipo Actualizado con Éxito</h5>
+      </div>
+      <div class="modal-body text-center">
+        {% if logo_url %}
+        <img src="{{ url_for('static', path=logo_url) }}" alt="Logo del equipo" class="img-fluid mb-3" style="max-height: 100px;">
+        {% else %}
+        <p>No hay logo disponible.</p>
+        {% endif %}
+        <p><strong>Nombre:</strong> {{ nombre }}</p>
+        <p><strong>Nuevo Grupo:</strong> {{ grupo }}</p>
+        <p><strong>Nuevos Puntos:</strong> {{ puntos }}</p>
+        <p><strong>País:</strong> {{ pais }}</p> {# Añadido para mostrar el país también #}
+      </div>
+      <div class="modal-footer">
+        <a href="{{ url_for('mostrar_equipos') }}" class="btn btn-success">Ver todos los equipos</a>
+        <a href="{{ url_for('mostrar_formulario_actualizar_equipo') }}" class="btn btn-secondary">Actualizar otro</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

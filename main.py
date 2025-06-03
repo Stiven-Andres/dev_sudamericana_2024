@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from shutil import copyfileobj
+from sqlalchemy.orm import selectinload
+from models import *
 import uuid
 import os
 from sqlmodel import SQLModel
@@ -12,7 +14,6 @@ from sqlalchemy.orm import sessionmaker
 from typing import List, Optional
 from utils.connection_db import *
 from contextlib import asynccontextmanager
-from models import *
 from operations import *
 
 
@@ -55,10 +56,69 @@ async def mostrar_equipo_agregado(request: Request, nombre: str, grupo: str, pai
     })
 
 
+@app.get("/formulario-actualizar-equipo", response_class=HTMLResponse)
+async def mostrar_formulario_actualizar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
+    equipos = await obtener_todos_los_equipos(session)
+    return templates.TemplateResponse("formulario_actualizar_equipo.html", {"request": request, "equipos": equipos})
+
+@app.post("/actualizar-equipo/", response_class=HTMLResponse)
+async def actualizar_equipo_html(
+    request: Request,
+    equipo_id: int = Form(...),
+    nuevo_grupo: str = Form(...),
+    nuevos_puntos: int = Form(...)
+):
+    async with AsyncSession(engine) as session:
+        try:
+            equipo_actualizado = await actualizar_grupo_y_puntos_equipo(
+                session,
+                equipo_id=equipo_id,
+                nuevo_grupo=nuevo_grupo,
+                nuevos_puntos=nuevos_puntos
+            )
+            # --- CAMBIO AQUÍ ---
+            # En lugar de redirigir, renderiza la plantilla de confirmación con los datos del equipo
+            return templates.TemplateResponse(
+                "equipo_actualizado.html",
+                {
+                    "request": request,
+                    "nombre": equipo_actualizado.nombre,
+                    "grupo": equipo_actualizado.grupo,
+                    "puntos": equipo_actualizado.puntos,
+                    "pais": equipo_actualizado.pais,  # Asegúrate de pasar el país
+                    "logo_url": equipo_actualizado.logo_url
+                }
+            )
+            # --- FIN DEL CAMBIO ---
+        except HTTPException as e:
+            equipos = await obtener_todos_los_equipos(session)
+            return templates.TemplateResponse(
+                "formulario_actualizar_equipo.html",
+                {"request": request, "equipos": equipos, "error_message": e.detail}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error interno del servidor: {e}")
+
+
+
+@app.get("/partido/formulario", response_class=HTMLResponse)
+async def mostrar_formulario_partido(request: Request, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(EquipoSQL))
+    equipos = result.scalars().all()
+    return templates.TemplateResponse("formulario_partido.html", {"request": request, "equipos": equipos})
+
 @app.get("/equipos-html", response_class=HTMLResponse)
 async def mostrar_equipos(request: Request, session: AsyncSession = Depends(get_session)):
     equipos = await obtener_todos_los_equipos(session)
     return templates.TemplateResponse("equipos.html", {"request": request, "equipos": equipos})
+
+
+# NUEVA RUTA para mostrar todos los partidos en un template HTML
+@app.get("/partidos/", response_class=HTMLResponse)
+async def mostrar_partidos(request: Request, session: AsyncSession = Depends(get_session)):
+    partidos = await obtener_todos_los_partidos(session)
+    return templates.TemplateResponse("partidos.html", {"request": request, "partidos": partidos})
+
 
 
 # ----------- OTROS --------------
@@ -177,7 +237,49 @@ async def eliminar_equipo(equipo_id: int, session: AsyncSession = Depends(get_se
 
 # ----------- PARTIDOS --------------
 @app.post("/partidos/", response_model=PartidoSQL)
-async def crear_partido(partido: PartidoSQL, session: AsyncSession = Depends(get_session)):
+async def crear_partido(
+    equipo_local_id: int = Form(...),
+    equipo_visitante_id: int = Form(...),
+    goles_local: int = Form(...),
+    goles_visitante: int = Form(...),
+    tarjetas_amarillas_local: int = Form(...),
+    tarjetas_amarillas_visitante: int = Form(...),
+    tarjetas_rojas_local: int = Form(...),
+    tarjetas_rojas_visitante: int = Form(...),
+    tiros_esquina_local: int = Form(...),
+    tiros_esquina_visitante: int = Form(...),
+    tiros_libres_local: int = Form(...),
+    tiros_libres_visitante: int = Form(...),
+    faltas_local: int = Form(...),
+    faltas_visitante: int = Form(...),
+    fueras_de_juego_local: int = Form(...),
+    fueras_de_juego_visitante: int = Form(...),
+    pases_local: int = Form(...),
+    pases_visitante: int = Form(...),
+    fase: Fases = Form(...),
+    session: AsyncSession = Depends(get_session)
+):
+    partido = PartidoSQL(
+        equipo_local_id=equipo_local_id,
+        equipo_visitante_id=equipo_visitante_id,
+        goles_local=goles_local,
+        goles_visitante=goles_visitante,
+        tarjetas_amarillas_local=tarjetas_amarillas_local,
+        tarjetas_amarillas_visitante=tarjetas_amarillas_visitante,
+        tarjetas_rojas_local=tarjetas_rojas_local,
+        tarjetas_rojas_visitante=tarjetas_rojas_visitante,
+        tiros_esquina_local=tiros_esquina_local,
+        tiros_esquina_visitante=tiros_esquina_visitante,
+        tiros_libres_local=tiros_libres_local,
+        tiros_libres_visitante=tiros_libres_visitante,
+        faltas_local=faltas_local,
+        faltas_visitante=faltas_visitante,
+        fueras_de_juego_local=fueras_de_juego_local,
+        fueras_de_juego_visitante=fueras_de_juego_visitante,
+        pases_local=pases_local,
+        pases_visitante=pases_visitante,
+        fase=fase
+    )
     return await create_partido_sql(session, partido)
 
 @app.get("/partidos/", response_model=List[PartidoSQL])
