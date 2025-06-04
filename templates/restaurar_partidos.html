@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Restaurar Partidos Inactivos{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Restaurar Partidos Inactivos</h2>
+
+{% if partidos %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for partido in partidos %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-warning">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h5 class="card-title mb-0">Partido Inactivo #{{ partido.id }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text"><strong>Fecha:</strong> {{ partido.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p class="card-text"><strong>Fase:</strong> {{ partido.fase.value }}</p>
+                    <hr>
+                    <h6 class="card-subtitle mb-2 text-muted">Equipos:</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong>Local:</strong> {{ partido.equipo_local.nombre }}</span>
+                            <span class="badge bg-secondary rounded-pill">{{ partido.goles_local }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong>Visitante:</strong> {{ partido.equipo_visitante.nombre }}</span>
+                            <span class="badge bg-secondary rounded-pill">{{ partido.goles_visitante }}</span>
+                        </li>
+                    </ul>
+                    {# You can add other statistics here if desired #}
+                </div>
+                <div class="card-footer text-center">
+                    <form action="/partidos/restaurar/{{ partido.id }}" method="post" onsubmit="return confirm('¿Estás seguro de que quieres restaurar este partido?');">
+                        <button type="submit" class="btn btn-success btn-sm">Restaurar Partido</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info" role="alert">
+        No hay partidos inactivos para restaurar.
+    </div>
+{% endif %}
+
+<div class="mt-4 text-center">
+    <a href="/inicio" class="btn btn-secondary">Volver al Inicio</a>
+</div>
+{% endblock %}

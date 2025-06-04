@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Partidos Inactivos{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Partidos Inactivos</h2>
+
+{% if partidos %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for partido in partidos %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-danger"> {# Added border-danger for visual distinction #}
+                <div class="card-header bg-danger text-white text-center"> {# Changed header color #}
+                    <h5 class="card-title mb-0">Partido Inactivo #{{ partido.id }}</h5>
+                </div>
+                <div class="card-body">
+                    {# Changed partido.fecha to partido.created_at #}
+                    <p class="card-text"><strong>Fecha:</strong> {{ partido.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p class="card-text"><strong>Fase:</strong> {{ partido.fase.value }}</p>
+                    <hr>
+                    <h6 class="card-subtitle mb-2 text-muted">Equipos:</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong>Local:</strong> {{ partido.equipo_local.nombre }}</span>
+                            <span class="badge bg-secondary rounded-pill">{{ partido.goles_local }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong>Visitante:</strong> {{ partido.equipo_visitante.nombre }}</span>
+                            <span class="badge bg-secondary rounded-pill">{{ partido.goles_visitante }}</span>
+                        </li>
+                    </ul>
+                    <h6 class="card-subtitle mb-2 text-muted">Estadísticas:</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Tarjetas Amarillas Local: {{ partido.tarjetas_amarillas_local }}</li>
+                        <li class="list-group-item">Tarjetas Amarillas Visitante: {{ partido.tarjetas_amarillas_visitante }}</li>
+                        <li class="list-group-item">Tarjetas Rojas Local: {{ partido.tarjetas_rojas_local }}</li>
+                        <li class="list-group-item">Tarjetas Rojas Visitante: {{ partido.tarjetas_rojas_visitante }}</li>
+                        <li class="list-group-item">Tiros Esquina Local: {{ partido.tiros_esquina_local }}</li>
+                        <li class="list-group-item">Tiros Esquina Visitante: {{ partido.tiros_esquina_visitante }}</li>
+                        <li class="list-group-item">Tiros Libres Local: {{ partido.tiros_libres_local }}</li>
+                        <li class="list-group-item">Tiros Libres Visitante: {{ partido.tiros_libres_visitante }}</li>
+                        <li class="list-group-item">Faltas Local: {{ partido.faltas_local }}</li>
+                        <li class="list-group-item">Faltas Visitante: {{ partido.faltas_visitante }}</li>
+                        <li class="list-group-item">Fueras de Juego Local: {{ partido.fueras_de_juego_local }}</li>
+                        <li class="list-group-item">Fueras de Juego Visitante: {{ partido.fueras_de_juego_visitante }}</li>
+                        <li class="list-group-item">Pases Local: {{ partido.pases_local }}</li>
+                        <li class="list-group-item">Pases Visitante: {{ partido.pases_visitante }}</li>
+                    </ul>
+                </div>
+                <div class="card-footer text-center">
+                    <span class="text-danger">Este partido está inactivo.</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info" role="alert">
+        No hay partidos inactivos para mostrar.
+    </div>
+{% endif %}
+
+<div class="mt-4 text-center">
+    <a href="/inicio" class="btn btn-secondary">Volver al Inicio</a>
+</div>
+{% endblock %}

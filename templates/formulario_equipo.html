@@ -1,26 +1,53 @@
 {% extends "base.html" %}
 {% block content %}
-<form method="post" action="/equipos/" enctype="multipart/form-data">
-  <div class="mb-3">
-    <label for="nombre" class="form-label">Nombre del equipo</label>
-    <input type="text" class="form-control" id="nombre" name="nombre" required>
-  </div>
-  <div class="mb-3">
-    <label for="pais" class="form-label">País</label>
-    <input type="text" class="form-control" id="pais" name="pais" required>
-  </div>
-  <div class="mb-3">
-    <label for="grupo" class="form-label">Grupo</label>
-    <input type="text" class="form-control" id="grupo" name="grupo" required>
-  </div>
-  <div class="mb-3">
-    <label for="puntos" class="form-label">Puntos</label>
-    <input type="number" class="form-control" id="puntos" name="puntos" required>
-  </div>
-  <div class="mb-3">
-    <label for="logo" class="form-label">Logo del equipo</label>
-    <input type="file" class="form-control" id="logo" name="logo" accept=".png,.jpg,.jpeg" required>
-  </div>
-  <button type="submit" class="btn btn-primary">Registrar equipo</button>
-</form>
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Registrar Nuevo Equipo</h1>
+    <form method="post" action="/equipos/" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre del equipo</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required>
+            <div class="invalid-feedback">
+                Por favor, ingresa el nombre del equipo.
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="pais" class="form-label">País</label>
+            <input type="text" class="form-control" id="pais" name="pais" required>
+        </div>
+        <div class="mb-3">
+            <label for="grupo" class="form-label">Grupo</label>
+            <input type="text" class="form-control" id="grupo" name="grupo" required>
+            <div class="invalid-feedback">
+                Por favor, ingresa el grupo.
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="puntos" class="form-label">Puntos</label>
+            <input type="number" class="form-control" id="puntos" name="puntos" required min="0">
+            <div class="invalid-feedback">
+                Por favor, ingresa los puntos.
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="logo" class="form-label">Logo del equipo</label>
+            <input type="file" class="form-control" id="logo" name="logo" accept=".png,.jpg,.jpeg" required>
+            <div class="invalid-feedback">
+                Por favor, selecciona un logo.
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="esta_activo" class="form-label">Estado del Equipo</label>
+            <select class="form-select" id="esta_activo" name="esta_activo" required>
+                <option value="true">Activo</option>
+                <option value="false">Inactivo</option>
+            </select>
+            <div class="invalid-feedback">
+                Por favor, selecciona el estado del equipo.
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Registrar equipo</button>
+    </form>
+</div>
 {% endblock %}

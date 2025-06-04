@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Equipos Inactivos - Copa Sudamericana{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4 text-center text-secondary">Listado de Equipos Inactivos / Archivados</h1>
+  <p class="text-center text-muted">Estos equipos han sido marcados como inactivos y no aparecen en los listados principales.</p>
+
+  {% if equipos %}
+  <div class="row">
+    {% for equipo in equipos %}
+    <div class="col-md-4 mb-4">
+      <div class="card shadow-sm border-secondary"> {# Borde secundario para diferenciar #}
+        <div class="card-body">
+          <div class="text-center mb-3">
+            <img src="{{ url_for('static', path=equipo.logo_url) }}" alt="Logo de {{ equipo.nombre }}" width="80" height="80" style="object-fit: contain;">
+          </div>
+          <h5 class="card-title text-center text-secondary">{{ equipo.nombre }} (Inactivo)</h5>
+          <p class="card-text"><strong>ID:</strong> {{ equipo.id }}</p>
+          <p><strong>País:</strong> {{ equipo.pais }}</p>
+          <p><strong>Grupo:</strong> {{ equipo.grupo }}</p>
+          <p><strong>Puntos (antes de desactivar):</strong> {{ equipo.puntos }}</p>
+          <hr>
+          <p><strong>Goles a favor:</strong> {{ equipo.goles_a_favor }}</p>
+          <p><strong>Goles en contra:</strong> {{ equipo.goles_en_contra }}</p>
+          {# ... (otras estadísticas si quieres mostrarlas) ... #}
+          <div class="text-center mt-3">
+              <form action="{{ url_for('restaurar_equipo_post') }}" method="post" onsubmit="return confirm('¿Estás seguro de que quieres restaurar este equipo?');">
+                  <input type="hidden" name="equipo_id" value="{{ equipo.id }}">
+                  <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-arrow-clockwise"></i> Restaurar</button>
+              </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info text-center" role="alert">
+    No hay equipos inactivos en este momento.
+  </div>
+  {% endif %}
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('mostrar_equipos') }}" class="btn btn-primary">Volver a Equipos Activos</a>
+  </div>
+</div>
+{% endblock %}

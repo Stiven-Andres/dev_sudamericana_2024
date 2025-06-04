@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from shutil import copyfileobj
 from sqlalchemy.orm import selectinload
+
 from models import *
 import uuid
 import os
@@ -26,6 +27,9 @@ async def lifespan(app: FastAPI):
 
 templates = Jinja2Templates(directory="templates")
 app = FastAPI(lifespan=lifespan)
+UPLOAD_DIR = "static/logos"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 # Archivos estáticos (CSS, imágenes, etc.)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -39,11 +43,24 @@ async def mostrar_inicio(request: Request):
 
 @app.get("/formulario-equipo", response_class=HTMLResponse)
 async def formulario_equipo(request: Request):
-    return templates.TemplateResponse("formulario_equipo.html", {"request": request})
+    # Pasa el Enum Paises al template para el dropdown
+    return templates.TemplateResponse("formulario_equipo.html", {"request": request, "Paises": Paises})
+
+# NEW ENDPOINT: Display form to restore inactive matches
+@app.get("/partidos/restaurar", response_class=HTMLResponse)
+async def mostrar_formulario_restaurar_partido(request: Request, session: AsyncSession = Depends(get_session)):
+    partidos_inactivos = await obtener_todos_los_partidos_inactivos(session)
+    return templates.TemplateResponse("restaurar_partidos.html", {"request": request, "partidos": partidos_inactivos})
 
 @app.get("/formulario_equipo", response_class=HTMLResponse)
 async def mostrar_formulario_equipo(request: Request):
     return templates.TemplateResponse("formulario_equipo.html", {"request": request})
+
+@app.get("/partido/formulario", response_class=HTMLResponse)
+async def mostrar_formulario_partido(request: Request, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(EquipoSQL))
+    equipos = result.scalars().all()
+    return templates.TemplateResponse("formulario_partido.html", {"request": request, "equipos": equipos})
 
 @app.get("/equipo-agregado", name="mostrar_equipo_agregado", response_class=HTMLResponse)
 async def mostrar_equipo_agregado(request: Request, nombre: str, grupo: str, pais: str, logo_url: str):
@@ -65,6 +82,29 @@ async def mostrar_formulario_actualizar_equipo(request: Request, session: AsyncS
 async def mostrar_formulario_buscar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
     equipos = await obtener_todos_los_equipos(session) # Se usa para el select del formulario
     return templates.TemplateResponse("formulario_buscar_equipo.html", {"request": request, "equipos": equipos})
+
+@app.get("/formulario-buscar-partido/", response_class=HTMLResponse)
+async def mostrar_formulario_buscar_partido(request: Request, session: AsyncSession = Depends(get_session)):
+    # No necesitamos cargar equipos para este formulario, solo el ID
+    return templates.TemplateResponse("formulario_buscar_partido.html", {"request": request})
+
+@app.get("/formulario-modificar-partido/", response_class=HTMLResponse)
+async def mostrar_formulario_modificar_partido(request: Request):
+    return templates.TemplateResponse("formulario_modificar_partido.html", {"request": request})
+
+@app.get("/formulario-eliminar-equipo", response_class=HTMLResponse)
+async def mostrar_formulario_eliminar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
+    equipos = await obtener_todos_los_equipos(session)  # Necesitamos la lista de equipos para el select
+    return templates.TemplateResponse("formulario_eliminar_equipo.html", {"request": request, "equipos": equipos})
+
+@app.get("/formulario-eliminar-partido/", response_class=HTMLResponse)
+async def mostrar_formulario_eliminar_partido(request: Request, session: AsyncSession = Depends(get_session)):
+    """
+    Muestra el formulario para eliminar un partido, con una lista de todos los partidos.
+    """
+    # Obtener todos los partidos para el selector, cargando equipos para nombres
+    partidos = await obtener_todos_los_partidos(session)
+    return templates.TemplateResponse("formulario_eliminar_partido.html", {"request": request, "partidos": partidos})
 
 @app.post("/buscar-equipo/", response_class=HTMLResponse)
 async def buscar_equipo_html(
@@ -134,16 +174,6 @@ async def actualizar_equipo_html(
             raise HTTPException(status_code=500, detail=f"Error interno del servidor: {e}")
 
 
-@app.get("/formulario-eliminar-equipo", response_class=HTMLResponse)
-async def mostrar_formulario_eliminar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
-    equipos = await obtener_todos_los_equipos(session)  # Necesitamos la lista de equipos para el select
-    return templates.TemplateResponse("formulario_eliminar_equipo.html", {"request": request, "equipos": equipos})
-
-
-@app.get("/formulario-buscar-partido/", response_class=HTMLResponse)
-async def mostrar_formulario_buscar_partido(request: Request, session: AsyncSession = Depends(get_session)):
-    # No necesitamos cargar equipos para este formulario, solo el ID
-    return templates.TemplateResponse("formulario_buscar_partido.html", {"request": request})
 
 
 @app.post("/buscar-partido/", response_class=HTMLResponse)
@@ -178,6 +208,13 @@ async def buscar_partido_html(
             {"request": request, "error_message": f"Error interno del servidor: {e}"}
         )
 
+# NEW ENDPOINT: Handle restoration of inactive match
+@app.post("/partidos/restaurar/{partido_id}", response_class=RedirectResponse, status_code=303)
+async def restaurar_partido_endpoint(partido_id: int, session: AsyncSession = Depends(get_session)):
+    restaurado = await restaurar_partido_sql(session, partido_id)
+    if not restaurado:
+        raise HTTPException(status_code=404, detail="Partido inactivo no encontrado o ya está activo")
+    return RedirectResponse(url="/partidos/activos", status_code=303)
 
 @app.post("/eliminar-equipo/", response_class=HTMLResponse)
 async def eliminar_equipo_html(
@@ -230,11 +267,13 @@ async def eliminar_equipo_html(
             {"request": request, "equipos": equipos, "error_message": f"Error interno del servidor: {e}"}
         )
 
-@app.get("/partido/formulario", response_class=HTMLResponse)
-async def mostrar_formulario_partido(request: Request, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(EquipoSQL))
-    equipos = result.scalars().all()
-    return templates.TemplateResponse("formulario_partido.html", {"request": request, "equipos": equipos})
+# NEW ENDPOINT: Listar partidos inactivos (HTML)
+@app.get("/partidos/inactivos", response_class=HTMLResponse)
+async def listar_partidos_inactivos_html(request: Request, session: AsyncSession = Depends(get_session)):
+    partidos_inactivos = await obtener_todos_los_partidos_inactivos(session)
+    return templates.TemplateResponse("lista_partidos_inactivos.html", {"request": request, "partidos": partidos_inactivos})
+
+
 
 @app.get("/equipos-html", response_class=HTMLResponse)
 async def mostrar_equipos(request: Request, session: AsyncSession = Depends(get_session)):
@@ -248,13 +287,6 @@ async def mostrar_partidos(request: Request, session: AsyncSession = Depends(get
     return templates.TemplateResponse("partidos.html", {"request": request, "partidos": partidos})
 
 
-@app.get("/formulario-modificar-partido/", response_class=HTMLResponse)
-async def mostrar_formulario_modificar_partido(request: Request):
-    """
-    Muestra el formulario para buscar un partido por ID para su modificación.
-    """
-    return templates.TemplateResponse("formulario_modificar_partido.html", {"request": request})
-
 
 @app.post("/modificar-partido/buscar", response_class=HTMLResponse)
 async def buscar_partido_para_modificar(
@@ -262,9 +294,6 @@ async def buscar_partido_para_modificar(
         partido_id: int = Form(...),
         session: AsyncSession = Depends(get_session)
 ):
-    """
-    Busca un partido por ID y, si lo encuentra, lo muestra en un formulario de actualización.
-    """
     print(f"DEBUG (main): POST /modificar-partido/buscar recibido. ID del formulario: '{partido_id}'")
     try:
         partido = await obtener_partido_por_id(session, partido_id)  # Esta función ya carga relaciones
@@ -293,6 +322,13 @@ async def buscar_partido_para_modificar(
             {"request": request, "error_message": f"Error interno del servidor: {e}"}
         )
 
+@app.get("/partidos/activos", response_class=HTMLResponse)
+async def listar_partidos_activos_html(request: Request, session: AsyncSession = Depends(get_session)):
+    # This function will fetch active matches and render a template
+    # You need a template file named 'lista_partidos_activos.html' (or similar)
+    # in your 'templates' directory.
+    partidos = await obtener_todos_los_partidos(session) # This should fetch only active ones if implemented in operations.py
+    return templates.TemplateResponse("lista_partidos_activos.html", {"request": request, "partidos": partidos})
 
 @app.post("/modificar-partido/{partido_id}", response_class=HTMLResponse)
 async def procesar_modificacion_partido(
@@ -407,25 +443,12 @@ async def procesar_modificacion_partido(
         )
 
 
-@app.get("/formulario-eliminar-partido/", response_class=HTMLResponse)
-async def mostrar_formulario_eliminar_partido(request: Request, session: AsyncSession = Depends(get_session)):
-    """
-    Muestra el formulario para eliminar un partido, con una lista de todos los partidos.
-    """
-    # Obtener todos los partidos para el selector, cargando equipos para nombres
-    partidos = await obtener_todos_los_partidos(session)
-    return templates.TemplateResponse("formulario_eliminar_partido.html", {"request": request, "partidos": partidos})
-
-
 @app.post("/eliminar-partido/", response_class=HTMLResponse)
 async def procesar_eliminar_partido(
         request: Request,
         partido_id: int = Form(...),
         session: AsyncSession = Depends(get_session)
 ):
-    """
-    Procesa la eliminación de un partido.
-    """
     print(f"DEBUG (main): POST /eliminar-partido/ recibido. ID del partido a eliminar: {partido_id}")
     eliminado_exitosamente = False
     try:
@@ -452,6 +475,50 @@ async def procesar_eliminar_partido(
              "error_message": f"Error interno del servidor: {e}"}
         )
 
+
+# Necesitamos una función para obtener un equipo por ID sin importar su estado para la confirmación de restauración
+async def obtener_equipo_por_id_incluir_inactivo(session: AsyncSession, equipo_id: int) -> Optional[EquipoSQL]:
+    result = await session.execute(
+        select(EquipoSQL).where(EquipoSQL.id == equipo_id)
+    )
+    return result.scalars().first()
+
+
+@app.get("/equipos-inactivos/", response_class=HTMLResponse)
+async def mostrar_equipos_inactivos(request: Request, session: AsyncSession = Depends(get_session)):
+    equipos_inactivos = await obtener_todos_los_equipos_inactivos(session)
+    return templates.TemplateResponse("equipos_inactivos.html", {"request": request, "equipos": equipos_inactivos})
+
+
+@app.get("/formulario-restaurar-equipo/", response_class=HTMLResponse)
+async def mostrar_formulario_restaurar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
+    equipos_inactivos = await obtener_todos_los_equipos_inactivos(session)  # Solo muestra inactivos para restaurar
+    return templates.TemplateResponse("formulario_restaurar_equipo.html",
+                                      {"request": request, "equipos": equipos_inactivos})
+
+
+@app.post("/restaurar-equipo/", response_class=HTMLResponse)
+async def restaurar_equipo_post(request: Request, equipo_id: int = Form(...),
+                                session: AsyncSession = Depends(get_session)):
+    equipo = await obtener_equipo_por_id_incluir_inactivo(session,
+                                                          equipo_id)  # Para obtener detalles del equipo antes de restaurar
+    if not equipo:
+        return templates.TemplateResponse("equipo_restaurado.html",
+                                          {"request": request, "restaurado_exitosamente": False, "id": equipo_id,
+                                           "nombre": "Desconocido", "pais": "Desconocido", "grupo": "Desconocido",
+                                           "logo_url": None})
+
+    restaurado = await restaurar_equipo_sql(session, equipo_id)
+
+    return templates.TemplateResponse("equipo_restaurado.html", {
+        "request": request,
+        "restaurado_exitosamente": restaurado,
+        "id": equipo.id,
+        "nombre": equipo.nombre,
+        "pais": equipo.pais.value,
+        "grupo": equipo.grupo,
+        "logo_url": equipo.logo_url
+    })
 
 
 # ----------- OTROS --------------
@@ -481,7 +548,7 @@ async def lanzar_error():
 
 # ----------- EQUIPOS --------------
 @app.post("/equipos/", response_class=HTMLResponse)
-async def crear_equipo_con_logo(
+async def crear_partido(
     request: Request,
     nombre: str = Form(...),
     pais: str = Form(...),
@@ -530,8 +597,6 @@ async def crear_equipo_con_logo(
           f"?nombre={nombre}&grupo={grupo}&pais={pais}&logo_url={equipo_db.logo_url}"
 
     return RedirectResponse(url=url, status_code=303)
-
-
 
 
 @app.get("/equipos/", response_model=List[EquipoSQL])
@@ -613,7 +678,29 @@ async def crear_partido(
         pases_visitante=pases_visitante,
         fase=fase
     )
-    return await create_partido_sql(session, partido)
+    partido_creado_db = await create_partido_sql(session, partido)
+    return RedirectResponse(url=f"/partido_agregado/{partido_creado_db.id}", status_code=303)
+
+
+@app.get("/partido_agregado/{partido_id}", response_class=HTMLResponse)
+async def mostrar_partido_agregado(partido_id: int, request: Request, session: AsyncSession = Depends(get_session)):
+    partido = await obtener_partido_por_id(session, partido_id)
+    if not partido:
+        raise HTTPException(status_code=404, detail="Partido no encontrado")
+
+    # Cargar los equipos relacionados para mostrar sus nombres
+    partido_con_equipos = await session.execute(
+        select(PartidoSQL)
+        .options(selectinload(PartidoSQL.equipo_local), selectinload(PartidoSQL.equipo_visitante))
+        .where(PartidoSQL.id == partido_id)
+    )
+    partido_con_equipos = partido_con_equipos.scalar_one_or_none()
+
+    if not partido_con_equipos:
+        raise HTTPException(status_code=404, detail="Partido no encontrado con detalles de equipo")
+
+
+    return templates.TemplateResponse("partido_agregado.html", {"request": request, "partido": partido_con_equipos})
 
 @app.get("/partidos/", response_model=List[PartidoSQL])
 async def listar_partidos(session: AsyncSession = Depends(get_session)):
@@ -634,7 +721,7 @@ async def actualizar_partido_endpoint(
     fase: str,
     session: AsyncSession = Depends(get_session)
 ):
-    partido_actualizado = await actualizar_partidos(session, partido_id, fase)
+    partido_actualizado = await actualizar_partido_sql(session, partido_id, fase)
     return partido_actualizado
 
 

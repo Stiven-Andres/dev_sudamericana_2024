@@ -56,8 +56,7 @@ class EquipoSQL(SQLModel, table=True):
     faltas: int = Field(default=0, ge=0)
     fueras_de_juego: int = Field(default=0, ge=0)
     pases: int = Field(default=0, ge=0)
-
-
+    esta_activo: bool = Field(default=True)
 
     # Añade estas relaciones inversas, especificando qué columna de PartidoSQL
     # apunta a este equipo cuando es local y cuando es visitante.
@@ -113,7 +112,7 @@ class PartidoSQL(SQLModel, table=True):
     fase: Fases = Field(default=Fases.Play_off)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
-
+    esta_activo: bool = Field(default=True)
 # --------- Modelo Reporte ---------
 class ReportePorPaisSQL(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

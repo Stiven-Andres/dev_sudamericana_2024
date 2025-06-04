@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">✨ Equipo Restaurado</h5>
+      </div>
+      <div class="modal-body text-center">
+        {% if restaurado_exitosamente %}
+          <p class="text-success h4">¡Equipo restaurado con éxito!</p>
+          {% if logo_url %}
+          <img src="{{ url_for('static', path=logo_url) }}" alt="Logo de {{ nombre }}" class="img-fluid mb-3" style="max-height: 100px;">
+          {% endif %}
+          <p>El equipo <strong>{{ nombre }}</strong> (ID: {{ id }}) de {{ pais }} del Grupo {{ grupo }} ha sido restaurado y ahora está activo.</p>
+        {% else %}
+          <p class="text-danger h4">No se pudo restaurar el equipo.</p>
+          <p>Hubo un problema al intentar restaurar el equipo (ID: {{ id }}). Por favor, asegúrate de que exista y no esté ya activo.</p>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <a href="{{ url_for('mostrar_equipos') }}" class="btn btn-primary">Ver equipos activos</a>
+        <a href="{{ url_for('mostrar_equipos_inactivos') }}" class="btn btn-secondary">Ver equipos inactivos</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

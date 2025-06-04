@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Restaurar Equipo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center text-success">Restaurar Equipo</h1>
+    <p class="text-center text-muted">Selecciona un equipo para volver a activarlo.</p>
+
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <form action="{{ url_for('restaurar_equipo_post') }}" method="post" class="needs-validation" novalidate>
+        <div class="mb-3">
+            <label for="equipo_id" class="form-label">Selecciona el Equipo a Restaurar:</label>
+            <select class="form-select" id="equipo_id" name="equipo_id" required>
+                <option value="">Selecciona un equipo...</option>
+                {% for equipo in equipos %}
+                <option value="{{ equipo.id }}">{{ equipo.nombre }} (ID: {{ equipo.id }})</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Por favor, selecciona un equipo.
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Restaurar Equipo</button>
+    </form>
+</div>
+{% endblock %}

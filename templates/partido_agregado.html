@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Partido Agregado{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-success text-center" role="alert">
+        <h4 class="alert-heading">✅ ¡Partido Agregado con Éxito!</h4>
+        <p>El nuevo partido ha sido registrado en la base de datos.</p>
+        <hr>
+        <p class="mb-0">Aquí están los detalles del partido que acabas de agregar:</p>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header text-center">
+            <h3>Detalles del Nuevo Partido</h3>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>ID del Partido:</strong> {{ partido.id }}</li>
+            <li class="list-group-item">
+                <strong>Equipo Local:</strong>
+                {% if partido.equipo_local %}
+                    {{ partido.equipo_local.nombre }} (ID: {{ partido.equipo_local.id }})
+                {% else %}
+                    ID Desconocido ({{ partido.equipo_local_id }})
+                {% endif %}
+            </li>
+            <li class="list-group-item">
+                <strong>Equipo Visitante:</strong>
+                {% if partido.equipo_visitante %}
+                    {{ partido.equipo_visitante.nombre }} (ID: {{ partido.equipo_visitante.id }})
+                {% else %}
+                    ID Desconocido ({{ partido.equipo_visitante_id }})
+                {% endif %}
+            </li>
+            <li class="list-group-item"><strong>Goles Local:</strong> {{ partido.goles_local }}</li>
+            <li class="list-group-item"><strong>Goles Visitante:</strong> {{ partido.goles_visitante }}</li>
+            <li class="list-group-item"><strong>Fase:</strong> {{ partido.fase.value if partido.fase else 'N/A' }}</li>
+            <li class="list-group-item"><strong>Fecha:</strong> {{ partido.fecha.strftime('%Y-%m-%d') if partido.fecha else 'N/A' }}</li>
+            <li class="list-group-item"><strong>Tarjetas Amarillas Local:</strong> {{ partido.tarjetas_amarillas_local }}</li>
+            <li class="list-group-item"><strong>Tarjetas Amarillas Visitante:</strong> {{ partido.tarjetas_amarillas_visitante }}</li>
+            <li class="list-group-item"><strong>Tarjetas Rojas Local:</strong> {{ partido.tarjetas_rojas_local }}</li>
+            <li class="list-group-item"><strong>Tarjetas Rojas Visitante:</strong> {{ partido.tarjetas_rojas_visitante }}</li>
+            <li class="list-group-item"><strong>Tiros de Esquina Local:</strong> {{ partido.tiros_esquina_local }}</li>
+            <li class="list-group-item"><strong>Tiros de Esquina Visitante:</strong> {{ partido.tiros_esquina_visitante }}</li>
+            <li class="list-group-item"><strong>Tiros Libres Local:</strong> {{ partido.tiros_libres_local }}</li>
+            <li class="list-group-item"><strong>Tiros Libres Visitante:</strong> {{ partido.tiros_libres_visitante }}</li>
+            <li class="list-group-item"><strong>Faltas Local:</strong> {{ partido.faltas_local }}</li>
+            <li class="list-group-item"><strong>Faltas Visitante:</strong> {{ partido.faltas_visitante }}</li>
+            <li class="list-group-item"><strong>Fueras de Juego Local:</strong> {{ partido.fueras_de_juego_local }}</li>
+            <li class="list-group-item"><strong>Fueras de Juego Visitante:</strong> {{ partido.fueras_de_juego_visitante }}</li>
+            <li class="list-group-item"><strong>Pases Local:</strong> {{ partido.pases_local }}</li>
+            <li class="list-group-item"><strong>Pases Visitante:</strong> {{ partido.pases_visitante }}</li>
+        </ul>
+        <div class="card-footer text-center">
+            <a href="/partidos/" class="btn btn-primary mt-3">Ver todos los partidos</a>
+            <a href="/formulario-crear-partido" class="btn btn-secondary mt-3">Registrar otro partido</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
