@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Fase: {{ reporte.fase.value }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Reporte de Fase: {{ reporte.fase.value }}</h2>
+
+    {% if reporte %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white text-center">
+            <h4 class="mb-0">Estadísticas Clave por Fase</h4>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>Fase:</strong> {{ reporte.fase.value }}</li>
+            <li class="list-group-item"><strong>Total de Partidos Activos:</strong> {{ reporte.total_partidos }}</li>
+            <li class="list-group-item"><strong>Total de Goles de Equipos Locales:</strong> {{ reporte.total_goles_local }}</li>
+            <li class="list-group-item"><strong>Total de Goles de Equipos Visitantes:</strong> {{ reporte.total_goles_visitante }}</li>
+            <li class="list-group-item"><strong>Última Actualización:</strong> {{ reporte.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</li>
+        </ul>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center" role="alert">
+        No se encontró ningún reporte para esta fase.
+    </div>
+    {% endif %}
+
+    <div class="mt-4 text-center">
+        <a href="/reportes/fase" class="btn btn-secondary me-2">Volver a Generar Reportes por Fase</a>
+        <a href="/inicio" class="btn btn-info">Volver al Inicio</a>
+    </div>
+</div>
+{% endblock %}

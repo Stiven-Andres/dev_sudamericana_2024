@@ -123,3 +123,10 @@ class ReportePorPaisSQL(SQLModel, table=True):
     promedio_goles_contra: float = Field(..., ge=0)
     updated_at: datetime = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})
 
+class ReportePorFaseSQL(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    fase: Fases = Field(unique=True) # Ensure uniqueness for each phase's report
+    total_partidos: int
+    total_goles_local: int
+    total_goles_visitante: int
+    updated_at: datetime = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})

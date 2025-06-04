@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Todos los Reportes por Fase{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Todos los Reportes por Fase</h2>
+
+    {% if reportes %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover caption-top">
+            <caption>Reportes generados para cada fase.</caption>
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Fase</th>
+                    <th scope="col">Total Partidos</th>
+                    <th scope="col">Goles Local</th>
+                    <th scope="col">Goles Visitante</th>
+                    <th scope="col">Última Actualización</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reporte in reportes %}
+                <tr>
+                    <td>{{ reporte.fase.value }}</td>
+                    <td>{{ reporte.total_partidos }}</td>
+                    <td>{{ reporte.total_goles_local }}</td>
+                    <td>{{ reporte.total_goles_visitante }}</td>
+                    <td>{{ reporte.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <a href="/reportes/fase/{{ reporte.fase.value }}" class="btn btn-sm btn-info">Ver Detalle</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center" role="alert">
+        No hay reportes de fase generados aún.
+    </div>
+    {% endif %}
+
+    <div class="mt-4 text-center">
+        <a href="/reportes/fase" class="btn btn-primary me-2">Generar Nuevo Reporte por Fase</a>
+        <a href="/inicio" class="btn btn-secondary">Volver al Inicio</a>
+    </div>
+</div>
+{% endblock %}

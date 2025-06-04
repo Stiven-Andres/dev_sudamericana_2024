@@ -773,3 +773,44 @@ async def ver_reporte_pais_html(
 async def listar_todos_los_reportes_html(request: Request, session: AsyncSession = Depends(get_session)):
     reportes = await obtener_todos_los_reportes_por_pais(session)
     return templates.TemplateResponse("lista_reportes_todos.html", {"request": request, "reportes": reportes})
+
+@app.get("/reportes/fase", response_class=HTMLResponse)
+async def mostrar_formulario_reporte_fase(request: Request):
+    fases = [f.value for f in Fases] # Get all phase names from the Fases Enum
+    return templates.TemplateResponse("formulario_reporte_fase.html", {"request": request, "fases": fases})
+
+@app.get("/reportes/fase/todos", response_class=HTMLResponse)
+async def listar_todos_los_reportes_fase_html(request: Request, session: AsyncSession = Depends(get_session)):
+    reportes = await obtener_todos_los_reportes_por_fase(session)
+    return templates.TemplateResponse("lista_reportes_fase_todos.html", {"request": request, "reportes": reportes})
+
+@app.post("/reportes/fase", response_class=HTMLResponse)
+async def generar_reporte_fase_html(
+    request: Request,
+    fase_seleccionada: Fases = Form(..., alias="fase"), # Use alias to match form field name
+    session: AsyncSession = Depends(get_session)
+):
+    try:
+        reporte = await generar_reportes_por_fase(session, fase_seleccionada)
+        return RedirectResponse(url=f"/reportes/fase/{fase_seleccionada.value}", status_code=303)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar reporte por fase: {e}")
+
+@app.get("/reportes/fase/{fase_nombre}", response_class=HTMLResponse)
+async def ver_reporte_fase_html(
+    request: Request,
+    fase_nombre: Fases, # FastAPI will automatically convert string to Fases enum
+    session: AsyncSession = Depends(get_session)
+):
+
+    reporte = await obtener_reporte_por_fase(session, fase_nombre)
+    if not reporte:
+        # If report doesn't exist, try to generate it on demand
+        try:
+            reporte = await generar_reportes_por_fase(session, fase_nombre)
+            return templates.TemplateResponse("reporte_fase_detalle.html", {"request": request, "reporte": reporte})
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=f"No se pudo generar ni encontrar el reporte para la fase {fase_nombre.value}: {e}")
+
+    return templates.TemplateResponse("reporte_fase_detalle.html", {"request": request, "reporte": reporte})
+
