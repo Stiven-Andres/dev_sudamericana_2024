@@ -19,7 +19,7 @@
                     <th scope="col">Goles Visitante</th>
                     <th scope="col">Fase</th>
                     <th scope="col">Estado</th>
-                    <th scope="col">Acciones</th>
+                    {# REMOVED: <th scope="col">Acciones</th> #}
                 </tr>
             </thead>
             <tbody>
@@ -50,9 +50,11 @@
                             <span class="badge bg-danger">Inactivo</span>
                         {% endif %}
                     </td>
+                    {# REMOVED:
                     <td>
                         <a href="/partidos/{{ partido.id }}" class="btn btn-sm btn-info me-2">Ver Detalles</a>
                         </td>
+                    #}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -66,7 +68,7 @@
 
     <div class="mt-4 text-center">
         <a href="/inicio" class="btn btn-secondary me-2">Volver al Inicio</a>
-        <a href="/formulario_partido" class="btn btn-primary">Registrar Nuevo Partido</a>
+        <a href="{{ url_for('mostrar_formulario_partido') }}" class="btn btn-primary">Registrar Nuevo Partido</a>
     </div>
 </div>
 {% endblock %}

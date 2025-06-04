@@ -555,6 +555,7 @@ async def crear_partido(
     grupo: str = Form(...),
     puntos: int = Form(...),
     logo: UploadFile = File(...),
+    esta_activo: bool = Form(True),
     session: AsyncSession = Depends(get_session)
 ):
     # Verificar tipo de archivo
@@ -586,7 +587,8 @@ async def crear_partido(
         goles_en_contra=0,
         faltas=0,
         fueras_de_juego=0,
-        pases=0
+        pases=0,
+        esta_activo = esta_activo
     )
 
     # Guardar en base de datos
