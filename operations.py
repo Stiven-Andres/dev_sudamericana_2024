@@ -675,3 +675,52 @@ async def obtener_todos_los_reportes_por_pais(session: AsyncSession) -> List[Rep
         select(ReportePorPaisSQL)
     )
     return result.scalars().all()
+
+async def generar_reportes_por_fase(session: AsyncSession, fase: Fases):
+    # Consulta para obtener partidos activos de una fase específica
+    partidos_de_la_fase_query = await session.execute(
+        select(PartidoSQL).where(PartidoSQL.fase == fase, PartidoSQL.esta_activo == True)
+    )
+    partidos_de_la_fase = partidos_de_la_fase_query.scalars().all()
+
+    total_partidos = len(partidos_de_la_fase)
+    total_goles_local = sum(partido.goles_local for partido in partidos_de_la_fase)
+    total_goles_visitante = sum(partido.goles_visitante for partido in partidos_de_la_fase)
+
+    # Verificar si ya existe el reporte para esta fase
+    reporte_existente = await session.execute(
+        select(ReportePorFaseSQL).where(ReportePorFaseSQL.fase == fase)
+    )
+    reporte_existente = reporte_existente.scalar_one_or_none()
+
+    if reporte_existente:
+        # Si existe, actualizar el reporte
+        reporte_existente.total_partidos = total_partidos
+        reporte_existente.total_goles_local = total_goles_local
+        reporte_existente.total_goles_visitante = total_goles_visitante
+        session.add(reporte_existente)
+    else:
+        # Si no existe, crear uno nuevo
+        nuevo_reporte = ReportePorFaseSQL(
+            fase=fase,
+            total_partidos=total_partidos,
+            total_goles_local=total_goles_local,
+            total_goles_visitante=total_goles_visitante,
+        )
+        session.add(nuevo_reporte)
+
+    await session.commit()
+    await session.refresh(reporte_existente if reporte_existente else nuevo_reporte)
+    return reporte_existente if reporte_existente else nuevo_reporte
+
+async def obtener_reporte_por_fase(session: AsyncSession, fase: Fases) -> Optional[ReportePorFaseSQL]:
+    result = await session.execute(
+        select(ReportePorFaseSQL).where(ReportePorFaseSQL.fase == fase)
+    )
+    return result.scalar_one_or_none()
+
+async def obtener_todos_los_reportes_por_fase(session: AsyncSession) -> List[ReportePorFaseSQL]:
+    result = await session.execute(
+        select(ReportePorFaseSQL)
+    )
+    return result.scalars().all()
