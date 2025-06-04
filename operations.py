@@ -1,5 +1,4 @@
 # operations.py
-
 from sqlalchemy.future import select
 import unicodedata
 from sqlalchemy import update, delete  # delete seguirá siendo útil para eliminación física si la necesitas
@@ -621,3 +620,58 @@ async def obtener_todos_los_reportes_por_pais(session: AsyncSession) -> List[Rep
     """Obtiene todos los reportes por país."""
     result = await session.execute(select(ReportePorPaisSQL))
     return list(result.scalars().all())
+
+async def generar_reportes_por_pais(session: AsyncSession, pais: Paises):
+    # Consulta para obtener equipos activos de un país específico
+    equipos_del_pais_query = await session.execute(
+        select(EquipoSQL).where(EquipoSQL.pais == pais, EquipoSQL.esta_activo == True)
+    )
+    equipos_del_pais = equipos_del_pais_query.scalars().all()
+
+    total_equipos = len(equipos_del_pais)
+    total_puntos = sum(equipo.puntos for equipo in equipos_del_pais)
+    total_goles_favor = sum(equipo.goles_a_favor for equipo in equipos_del_pais)
+    total_goles_contra = sum(equipo.goles_en_contra for equipo in equipos_del_pais)
+
+    promedio_goles_favor = total_goles_favor / total_equipos if total_equipos > 0 else 0
+    promedio_goles_contra = total_goles_contra / total_equipos if total_equipos > 0 else 0
+
+    # Verificar si ya existe el reporte para este país
+    reporte_existente = await session.execute(
+        select(ReportePorPaisSQL).where(ReportePorPaisSQL.pais == pais)
+    )
+    reporte_existente = reporte_existente.scalar_one_or_none()
+
+    if reporte_existente:
+        # Si existe, actualizar el reporte
+        reporte_existente.total_equipos = total_equipos
+        reporte_existente.total_puntos = total_puntos
+        reporte_existente.promedio_goles_favor = promedio_goles_favor
+        reporte_existente.promedio_goles_contra = promedio_goles_contra
+        session.add(reporte_existente)
+    else:
+        # Si no existe, crear uno nuevo
+        nuevo_reporte = ReportePorPaisSQL(
+            pais=pais,
+            total_equipos=total_equipos,
+            total_puntos=total_puntos,
+            promedio_goles_favor=promedio_goles_favor,
+            promedio_goles_contra=promedio_goles_contra,
+        )
+        session.add(nuevo_reporte)
+
+    await session.commit()
+    await session.refresh(reporte_existente if reporte_existente else nuevo_reporte) # Refresh to get updated values/ID
+    return reporte_existente if reporte_existente else nuevo_reporte
+
+async def obtener_reporte_por_pais(session: AsyncSession, pais: Paises) -> Optional[ReportePorPaisSQL]:
+    result = await session.execute(
+        select(ReportePorPaisSQL).where(ReportePorPaisSQL.pais == pais)
+    )
+    return result.scalar_one_or_none()
+
+async def obtener_todos_los_reportes_por_pais(session: AsyncSession) -> List[ReportePorPaisSQL]:
+    result = await session.execute(
+        select(ReportePorPaisSQL)
+    )
+    return result.scalars().all()

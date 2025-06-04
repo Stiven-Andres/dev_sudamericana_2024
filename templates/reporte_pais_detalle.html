@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de {{ reporte.pais.value }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Reporte de {{ reporte.pais.value }}</h2>
+
+    {% if reporte %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white text-center">
+            <h4 class="mb-0">Estadísticas Clave</h4>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><strong>País:</strong> {{ reporte.pais.value }}</li>
+            <li class="list-group-item"><strong>Total de Equipos Activos:</strong> {{ reporte.total_equipos }}</li>
+            <li class="list-group-item"><strong>Total de Puntos Acumulados:</strong> {{ reporte.total_puntos }}</li>
+            <li class="list-group-item"><strong>Promedio de Goles a Favor:</strong> {{ "%.2f"|format(reporte.promedio_goles_favor) }}</li>
+            <li class="list-group-item"><strong>Promedio de Goles en Contra:</strong> {{ "%.2f"|format(reporte.promedio_goles_contra) }}</li>
+            <li class="list-group-item"><strong>Última Actualización:</strong> {{ reporte.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</li>
+        </ul>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center" role="alert">
+        No se encontró ningún reporte para este país.
+    </div>
+    {% endif %}
+
+    <div class="mt-4 text-center">
+        <a href="/reportes/pais" class="btn btn-secondary me-2">Volver a Generar Reportes</a>
+        <a href="/inicio" class="btn btn-info">Volver al Inicio</a>
+    </div>
+</div>
+{% endblock %}

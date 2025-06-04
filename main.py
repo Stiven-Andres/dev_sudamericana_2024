@@ -736,6 +736,40 @@ async def eliminar_partido(partido_id: int, session: AsyncSession = Depends(get_
 
 
 # ----------- REPORTES --------------
-@app.get("/reportes/pais/{pais}", response_model=List[ReportePorPaisSQL])
-async def reporte_por_pais(pais: Paises, session: AsyncSession = Depends(get_session)):
-    return await generar_reportes_por_pais(session, pais)
+@app.get("/reportes/pais", response_class=HTMLResponse)
+async def mostrar_formulario_reporte_pais(request: Request):
+    paises = [p.value for p in Paises] # Get all country names from the Paises Enum
+    return templates.TemplateResponse("formulario_reporte_pais.html", {"request": request, "paises": paises})
+
+@app.post("/reportes/pais", response_class=HTMLResponse)
+async def generar_reporte_pais_html(
+    request: Request,
+    pais_seleccionado: Paises = Form(..., alias="pais"), # Use alias to match form field name
+    session: AsyncSession = Depends(get_session)
+):
+    try:
+        reporte = await generar_reportes_por_pais(session, pais_seleccionado)
+        return RedirectResponse(url=f"/reportes/pais/{pais_seleccionado.value}", status_code=303)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar reporte: {e}")
+
+@app.get("/reportes/pais/{pais_nombre}", response_class=HTMLResponse)
+async def ver_reporte_pais_html(
+    request: Request,
+    pais_nombre: Paises, # FastAPI will automatically convert string to Paises enum
+    session: AsyncSession = Depends(get_session)
+):
+    reporte = await obtener_reporte_por_pais(session, pais_nombre)
+    if not reporte:
+        try:
+            reporte = await generar_reportes_por_pais(session, pais_nombre)
+            return templates.TemplateResponse("reporte_pais_detalle.html", {"request": request, "reporte": reporte})
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=f"No se pudo generar ni encontrar el reporte para {pais_nombre.value}: {e}")
+
+    return templates.TemplateResponse("reporte_pais_detalle.html", {"request": request, "reporte": reporte})
+
+@app.get("/reportes/todos", response_class=HTMLResponse)
+async def listar_todos_los_reportes_html(request: Request, session: AsyncSession = Depends(get_session)):
+    reportes = await obtener_todos_los_reportes_por_pais(session)
+    return templates.TemplateResponse("lista_reportes_todos.html", {"request": request, "reportes": reportes})

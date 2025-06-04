@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Generar Reporte por País{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Generar Reporte por País</h2>
+
+    <form method="post" action="/reportes/pais" class="needs-validation" novalidate>
+        <div class="mb-3">
+            <label for="pais" class="form-label">Seleccionar País:</label>
+            <select class="form-select" id="pais" name="pais" required>
+                <option value="" disabled selected>Elige un país...</option>
+                {% for p in paises %}
+                    <option value="{{ p }}">{{ p }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Por favor, selecciona un país.
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary me-2">Generar/Actualizar Reporte</button>
+            <a href="/inicio" class="btn btn-secondary">Volver al Inicio</a>
+        </div>
+    </form>
+
+    <hr class="my-5">
+
+    <h3 class="mb-3 text-center">Ver Todos los Reportes Existentes</h3>
+    <div class="text-center">
+        <a href="/reportes/todos" class="btn btn-info">Ver Todos los Reportes</a>
+    </div>
+
+</div>
+{% endblock %}

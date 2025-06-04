@@ -116,9 +116,10 @@ class PartidoSQL(SQLModel, table=True):
 # --------- Modelo Reporte ---------
 class ReportePorPaisSQL(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    pais: Paises = Field(default=None)
+    pais: Paises = Field(unique=True)
     total_equipos: int = Field(..., ge=0)
     total_puntos: int = Field(..., ge=0)
     promedio_goles_favor: float = Field(..., ge=0)
     promedio_goles_contra: float = Field(..., ge=0)
+    updated_at: datetime = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})
 
