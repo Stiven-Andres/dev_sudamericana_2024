@@ -814,3 +814,24 @@ async def ver_reporte_fase_html(
 
     return templates.TemplateResponse("reporte_fase_detalle.html", {"request": request, "reporte": reporte})
 
+@app.get("/acerca-de/desarrollador", response_class=HTMLResponse)
+async def mostrar_info_desarrollador(request: Request):
+    """
+    Muestra una página con información sobre el desarrollador.
+    """
+    # Puedes pasar cualquier información que quieras a la plantilla
+    info_desarrollador = {
+        "nombre": "Brayan Steven Quintero",
+        "email": "brayan.quintero.m@gmail.com",
+        "rol": "Desarrollador Full Stack",
+        "linkedin": "https://www.linkedin.com/in/brayan-steven-quintero-m/", # Reemplaza con tu perfil real
+        "github": "https://github.com/Brayan-Q", # Reemplaza con tu perfil real
+        "experiencia": "Desarrollo de aplicaciones web con FastAPI y bases de datos PostgreSQL.",
+        "proyecto": "Copa Sudamericana API"
+    }
+    return templates.TemplateResponse(
+        "acerca_de_desarrollador.html",
+        {"request": request, "desarrollador": info_desarrollador}
+    )
+
+

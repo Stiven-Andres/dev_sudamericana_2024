@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Acerca del Desarrollador{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="fw-light my-4">Acerca del Desarrollador</h3>
+                </div>
+                <div class="card-body">
+                    {% if desarrollador %}
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Nombre:</strong> Stiven Andres Paloma Villanueva</li>
+                        <li class="list-group-item"><strong>Email:</strong> <a href="mailto:{{ desarrollador.email }}">stiven04andres@gmail.com</a></li>
+                        <li class="list-group-item"><strong>Rol:</strong> Estudiante universitario</li>
+                        {% if desarrollador.github %}
+                        <li class="list-group-item"><strong>GitHub:</strong> <a href="https://github.com/Stiven-Andres" target="_blank" class="text-decoration-none">Ver perfil <i class="bi bi-github ms-1"></i></a></li>
+                        {% endif %}
+                        <li class="list-group-item"><strong>Experiencia:</strong> {{ desarrollador.experiencia }}</li>
+                        <li class="list-group-item"><strong>Este Proyecto:</strong> {{ desarrollador.proyecto }}</li>
+                    </ul>
+                    {% else %}
+                    <div class="alert alert-info text-center" role="alert">
+                        Información del desarrollador no disponible.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-center py-3">
+                    <a href="{{ url_for('mostrar_inicio') }}" class="btn btn-secondary">Volver al Inicio</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
