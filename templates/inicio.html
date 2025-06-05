@@ -8,6 +8,13 @@
         <h1 class="display-5 fw-bold">¡Bienvenido a la Copa Sudamericana!</h1>
         <p class="fs-4">Explora los equipos, partidos y estadísticas del torneo.</p>
         <a class="btn btn-primary btn-lg" href="{{ url_for('mostrar_equipos') }}">Ver Equipos</a>
+        <h2 class="mt-5 mb-4">Reportes y Estadísticas</h2>
+        <div class="d-grid gap-3 col-6 mx-auto">
+            <a class="btn btn-success btn-lg" href="/reportes/pais">Generar Reporte por País</a>
+            <a class="btn btn-info btn-lg text-white" href="/reportes/todos">Ver Todos los Reportes por País</a>
+            <a class="btn btn-warning btn-lg" href="/reportes/fase">Generar Reporte por Fase</a>
+            <a class="btn btn-danger btn-lg" href="/reportes/fase/todos">Ver Todos los Reportes por Fase</a>
+        </div>
     </div>
 </div>
 {% endblock %}
