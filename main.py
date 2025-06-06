@@ -834,4 +834,8 @@ async def mostrar_info_desarrollador(request: Request):
         {"request": request, "desarrollador": info_desarrollador}
     )
 
+@app.get("/reportes/menos-goleados", response_class=HTMLResponse)
+async def mostrar_reporte_menos_goleados(request: Request, session: AsyncSession = Depends(get_session)):
+    equipos_menos_goleados = await obtener_equipos_menos_goleados(session)
+    return templates.TemplateResponse("reporte_menos_goleados.html", {"request": request, "equipos": equipos_menos_goleados})
 

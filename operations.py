@@ -724,3 +724,76 @@ async def obtener_todos_los_reportes_por_fase(session: AsyncSession) -> List[Rep
         select(ReportePorFaseSQL)
     )
     return result.scalars().all()
+
+
+async def obtener_equipos_menos_goleados(session: AsyncSession) -> List[EquipoMenosGoleadoReporte]:
+    # Subquery para sumar goles recibidos como local
+    goles_contra_local_subquery = (
+        select(
+            PartidoSQL.equipo_local_id.label("equipo_id"),
+            func.sum(PartidoSQL.goles_visitante).label("goles_en_contra_local")
+        )
+        .group_by(PartidoSQL.equipo_local_id)
+        .subquery("gcl") # Nombre explícito para el subquery
+    )
+
+    # Subquery para sumar goles recibidos como visitante
+    goles_contra_visitante_subquery = (
+        select(
+            PartidoSQL.equipo_visitante_id.label("equipo_id"),
+            func.sum(PartidoSQL.goles_local).label("goles_en_contra_visitante")
+        )
+        .group_by(PartidoSQL.equipo_visitante_id)
+        .subquery("gcv") # Nombre explícito para el subquery
+    )
+
+    # Consulta interna para calcular los goles en contra por equipo
+    # Esta subconsulta ya tendrá una fila por equipo con su total de goles recibidos
+    base_query_for_ranking = (
+        select(
+            EquipoSQL.id,
+            EquipoSQL.nombre,
+            EquipoSQL.pais,
+            EquipoSQL.grupo,
+            EquipoSQL.logo_url,
+            (
+                func.coalesce(goles_contra_local_subquery.c.goles_en_contra_local, 0) +
+                func.coalesce(goles_contra_visitante_subquery.c.goles_en_contra_visitante, 0)
+            ).label("goles_en_contra")
+        )
+        .join(goles_contra_local_subquery, EquipoSQL.id == goles_contra_local_subquery.c.equipo_id, isouter=True)
+        .join(goles_contra_visitante_subquery, EquipoSQL.id == goles_contra_visitante_subquery.c.equipo_id, isouter=True)
+        # No se necesita un GROUP BY explícito aquí si EquipoSQL.id es la clave primaria
+        # y las subconsultas ya agregan por equipo_id.
+    ).subquery("ranked_teams_pre") # Convertir esta parte en un subquery
+
+    # Consulta final que selecciona de la subconsulta y aplica el ORDER BY y LIMIT
+    query = (
+        select(
+            base_query_for_ranking.c.id,
+            base_query_for_ranking.c.nombre,
+            base_query_for_ranking.c.pais,
+            base_query_for_ranking.c.grupo,
+            base_query_for_ranking.c.logo_url,
+            base_query_for_ranking.c.goles_en_contra
+        )
+        .order_by(base_query_for_ranking.c.goles_en_contra.asc()) # Ordenar por la columna ya calculada
+        .limit(6) # Limitar a los 6 primeros
+    )
+
+    result = await session.execute(query)
+    equipos_data = result.all()
+
+    # Reconstruir objetos usando el modelo EquipoMenosGoleadoReporte
+    equipos_con_goles = []
+    for data in equipos_data:
+        equipo = EquipoMenosGoleadoReporte(
+            id=data.id,
+            nombre=data.nombre,
+            pais=data.pais,
+            grupo=data.grupo,
+            logo_url=data.logo_url,
+            goles_en_contra=data.goles_en_contra,
+        )
+        equipos_con_goles.append(equipo)
+    return equipos_con_goles

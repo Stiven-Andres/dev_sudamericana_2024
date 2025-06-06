@@ -39,6 +39,13 @@ class EquipoCreate(BaseModel):
     grupo: str
     puntos: int
 
+class EquipoMenosGoleadoReporte(BaseModel):
+    id: Optional[int] = None
+    nombre: str
+    pais: Paises
+    grupo: str
+    logo_url: Optional[str]
+    goles_en_contra: int
 # --------- Modelo Equipo ---------
 class EquipoSQL(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
