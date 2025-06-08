@@ -32,26 +32,38 @@ class Paises(str, Enum):
     uruguay = "Uruguay"
     venezuela = "Venezuela"
 
+class Grupos(str, Enum):
+    a="a"
+    b="b"
+    c="c"
+    d="d"
+    e="e"
+    f="f"
+    g="g"
+    h="h"
+
 class EquipoCreate(BaseModel):
     id: Optional[int] = None
     nombre: str
     pais: Paises
-    grupo: str
+    grupo: Grupos
     puntos: int
 
 class EquipoMenosGoleadoReporte(BaseModel):
     id: Optional[int] = None
     nombre: str
     pais: Paises
-    grupo: str
+    grupo: Grupos
     logo_url: Optional[str]
     goles_en_contra: int
+
+
 # --------- Modelo Equipo ---------
 class EquipoSQL(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str = Field(min_length=3, max_length=50)
     pais: Paises = Field(default=Paises.colombia)
-    grupo: str = Field(..., min_length=1, max_length=10)
+    grupo: Grupos= Field(default=Grupos.a)
     puntos: int = Field(..., ge=0)
     logo_url: Optional[str] = Field(default="img/shield.png")
     tarjetas_amarillas: int = Field(ge=0)
@@ -65,8 +77,7 @@ class EquipoSQL(SQLModel, table=True):
     pases: int = Field(default=0, ge=0)
     esta_activo: bool = Field(default=True)
 
-    # Añade estas relaciones inversas, especificando qué columna de PartidoSQL
-    # apunta a este equipo cuando es local y cuando es visitante.
+
     partidos_como_local: List["PartidoSQL"] = Relationship(
         back_populates="equipo_local",
         sa_relationship_kwargs={"foreign_keys": "PartidoSQL.equipo_local_id"}
@@ -83,7 +94,7 @@ class PartidoSQL(SQLModel, table=True):
     equipo_local_id: int = Field(foreign_key="equiposql.id")
     equipo_visitante_id: int = Field(foreign_key="equiposql.id")
 
-    # ¡ACTUALIZA ESTAS LÍNEAS!
+
     equipo_local: Optional[EquipoSQL] = Relationship(
         back_populates="partidos_como_local",
         sa_relationship_kwargs={

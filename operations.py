@@ -1,4 +1,3 @@
-# operations.py
 from sqlalchemy.future import select
 import unicodedata
 from sqlalchemy import update, delete  # delete seguirá siendo útil para eliminación física si la necesitas
@@ -7,7 +6,7 @@ from models import *
 from datetime import datetime, timezone, date
 from typing import Dict, Any, Optional, List
 from sqlmodel import Session
-from sqlalchemy import func, text
+from sqlalchemy import func, text, case
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -285,16 +284,35 @@ async def obtener_todos_los_partidos_inactivos(session: AsyncSession) -> List[Pa
     return result.scalars().unique().all()
 
 async def obtener_partido_por_id(session: AsyncSession, partido_id: int) -> Optional[PartidoSQL]:
-    """Obtiene un partido por ID, solo si está activo."""
-    result = await session.execute(
-        select(PartidoSQL)
-        .options(selectinload(PartidoSQL.equipo_local), selectinload(PartidoSQL.equipo_visitante))
-        .where(PartidoSQL.id == partido_id, PartidoSQL.esta_activo == True)  # <-- Filtra por activo
-    )
-    return result.scalars().first()
+    """
+    Busca un partido por su ID, cargando los equipos relacionados.
+    """
+    print(f"DEBUG: [operations.py] Buscando partido con ID: {partido_id}")
+    try:
+        result = await session.execute(
+            select(PartidoSQL)
+            .where(PartidoSQL.id == partido_id)
+            .options(selectinload(PartidoSQL.equipo_local),
+                     selectinload(PartidoSQL.equipo_visitante))
+        )
+        partido = result.scalar_one_or_none()
+        if partido:
+            print(f"DEBUG: [operations.py] Partido ENCONTRADO: ID={partido.id}, Goles Local={partido.goles_local}, Goles Visitante={partido.goles_visitante}")
+        else:
+            print(f"DEBUG: [operations.py] Partido NO encontrado para ID: {partido_id}")
+        return partido
+    except Exception as e:
+        print(f"ERROR: [operations.py] Error en buscar_partido_por_id para ID {partido_id}: {e}")
+        # Re-lanzar o manejar el error según sea necesario
+        raise # Vuelve a lanzar la excepción para que sea capturada en main.py
 
 
 async def create_partido_sql(session: AsyncSession, partido: PartidoSQL) -> PartidoSQL:
+    if partido.equipo_local_id == partido.equipo_visitante_id:
+        raise HTTPException(
+            status_code=400,
+            detail="El equipo local y el equipo visitante no pueden ser el mismo en un partido."
+        )
 
     # Establecer esta_activo a True por defecto si no se especificó (o explícitamente)
     partido.esta_activo = True
@@ -797,3 +815,4 @@ async def obtener_equipos_menos_goleados(session: AsyncSession) -> List[EquipoMe
         )
         equipos_con_goles.append(equipo)
     return equipos_con_goles
+

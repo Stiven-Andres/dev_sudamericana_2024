@@ -28,9 +28,14 @@
 
         <div class="mb-3">
             <label for="nuevo_grupo" class="form-label">Nuevo Grupo:</label>
-            <input type="text" class="form-control" id="nuevo_grupo" name="nuevo_grupo" placeholder="Ej: Grupo C" required minlength="1" maxlength="10">
+            <select class="form-select" id="nuevo_grupo" name="nuevo_grupo" required>
+                <option value="">Selecciona un grupo</option>
+                {% for g in ["a", "b", "c", "d", "e", "f", "g", "h"] %}
+                    <option value="{{ g }}">{{ g }}</option>
+                {% endfor %}
+            </select>
             <div class="invalid-feedback">
-                Por favor, ingresa el nuevo grupo (1-10 caracteres).
+                Por favor, ingresa el nuevo grupo.
             </div>
         </div>
 

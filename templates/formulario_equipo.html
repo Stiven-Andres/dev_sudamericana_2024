@@ -12,13 +12,26 @@
         </div>
         <div class="mb-3">
             <label for="pais" class="form-label">País</label>
-            <input type="text" class="form-control" id="pais" name="pais" required>
+            <select class="form-select" id="pais" name="pais" required>
+                <option value="">Selecciona un país...</option>
+                {% for p in ["Argentina", "Brasil", "Colombia", "Uruguay", "Ecuador", "Paraguay", "Bolivia", "Venezuela", "Chile", "Peru"] %}
+                    <option value="{{ p }}">{{ p }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Por favor, selecciona un país.
+            </div>
         </div>
         <div class="mb-3">
             <label for="grupo" class="form-label">Grupo</label>
-            <input type="text" class="form-control" id="grupo" name="grupo" required>
+            <select class="form-select" id="grupo" name="grupo" required>
+                <option value="">Selecciona un grupo...</option>
+                {% for g in ["a", "b", "c", "d", "e", "f", "g", "h"] %}
+                    <option value="{{ g }}">{{ g }}</option>
+                {% endfor %}
+            </select>
             <div class="invalid-feedback">
-                Por favor, ingresa el grupo.
+                Por favor, selecciona el grupo.
             </div>
         </div>
         <div class="mb-3">
@@ -47,7 +60,7 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Registrar equipo</button>
+        <button type="submit" class="btn btn-primary">Registrar Equipo</button>
     </form>
 </div>
 {% endblock %}

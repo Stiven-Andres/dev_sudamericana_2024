@@ -5,7 +5,7 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content shadow">
       <div class="modal-header">
-        <h5 class="modal-title">🔍 Datos del Partido: ID {{ partido.id }}</h5>
+        <h5 class="modal-title">🔍 Datos del Partido: ID {% if partido %}{{ partido.id }}{% else %}No Encontrado{% endif %}</h5>
       </div>
       <div class="modal-body text-center">
         {% if partido %}
@@ -46,6 +46,9 @@
         {% else %}
           <p class="text-danger h4">Partido no encontrado.</p>
           <p>El ID de partido ingresado no corresponde a ningún partido registrado.</p>
+          {% if error_message %}
+            <p class="text-danger small">{{ error_message }}</p>
+          {% endif %}
         {% endif %}
       </div>
       <div class="modal-footer">

@@ -176,37 +176,42 @@ async def actualizar_equipo_html(
 
 
 
-@app.post("/buscar-partido/", response_class=HTMLResponse)
-async def buscar_partido_html(
-        request: Request,
-        partido_id: int = Form(...),
-        session: AsyncSession = Depends(get_session)
-):
-    print(f"DEBUG (main): POST /buscar-partido/ recibido. ID del formulario: '{partido_id}' (tipo: {type(partido_id)})")
-
-    partido_encontrado = None
+@app.post("/partidos/buscar", response_class=HTMLResponse)
+async def buscar_partido_por_id_html(request: Request, id_partido: int = Form(...), session: AsyncSession = Depends(get_session)):
+    print(f"DEBUG: [main.py] Recibido ID del formulario: {id_partido}, tipo: {type(id_partido)}") # Para depuración
     try:
-        partido_encontrado = await obtener_partido_por_id(session, partido_id)
-        if not partido_encontrado:
-            raise HTTPException(status_code=404, detail=f"Partido con ID '{partido_id}' no encontrado.")
+        partido = await obtener_partido_por_id(session, id_partido)
 
-        print(f"DEBUG (main): Partido encontrado: {partido_encontrado.id}, Fase: {partido_encontrado.fase}")
-        return templates.TemplateResponse(
-            "partido_encontrado.html",
-            {"request": request, "partido": partido_encontrado}
-        )
-    except HTTPException as e:
-        print(f"DEBUG (main): HTTPException capturada: {e.detail}")
-        return templates.TemplateResponse(
-            "formulario_buscar_partido.html",
-            {"request": request, "error_message": e.detail}
-        )
+        if partido:
+            print(f"DEBUG: [main.py] Partido encontrado en main.py para ID {id_partido}. Renderizando partido_encontrado.html")
+            return templates.TemplateResponse("partido_encontrado.html", {"request": request, "partido": partido})
+        else:
+            print(f"DEBUG: [main.py] Partido NO encontrado en main.py para ID {id_partido}. Renderizando partido_encontrado.html con partido=None")
+            # Si el partido no se encuentra, pasamos 'partido=None' explícitamente.
+            # El template 'partido_encontrado.html' ya maneja este caso con el 'else'.
+            return templates.TemplateResponse("partido_encontrado.html", {"request": request, "partido": None})
+
     except Exception as e:
-        print(f"DEBUG (main): ERROR INESPERADO al buscar partido: {e}")
+        print(f"ERROR: [main.py] Error al buscar partido en main.py: {e}")
+        # Puedes mostrar un mensaje de error más amigable al usuario
+        # O redirigir a una página de error
         return templates.TemplateResponse(
-            "formulario_buscar_partido.html",
-            {"request": request, "error_message": f"Error interno del servidor: {e}"}
+            "partido_encontrado.html", # Puedes crear un template específico para errores si prefieres
+            {"request": request, "partido": None, "error_message": f"Hubo un error al procesar tu solicitud: {e}"}
         )
+
+
+@app.post("/partidos/buscar", response_class=HTMLResponse)
+async def buscar_partido_por_id_html(request: Request, id_partido: int = Form(...), session: AsyncSession = Depends(get_session)):
+
+    print(f"Recibido ID del formulario: {id_partido}") # Para depuración
+    try:
+        partido = await obtener_partido_por_id(session, id_partido)
+        return templates.TemplateResponse("partido_encontrado.html", {"request": request, "partido": partido})
+    except Exception as e:
+        print(f"Error al buscar partido: {e}") # Para depuración
+        raise HTTPException(status_code=500, detail=f"Error interno del servidor: {e}")
+
 
 # NEW ENDPOINT: Handle restoration of inactive match
 @app.post("/partidos/restaurar/{partido_id}", response_class=RedirectResponse, status_code=303)
@@ -621,7 +626,7 @@ async def actualizar_equipo(
     puntos: Optional[int] = None,
     session: AsyncSession = Depends(get_session)
 ):
-    equipo_actualizado = await actualizar_datos_equipo(
+    equipo_actualizado = await actualizar_equipo_sql(
         session, equipo_id, nuevo_grupo=grupo, nuevos_puntos=puntos
     )
     return equipo_actualizado
@@ -636,8 +641,9 @@ async def eliminar_equipo(equipo_id: int, session: AsyncSession = Depends(get_se
 
 
 # ----------- PARTIDOS --------------
-@app.post("/partidos/", response_model=PartidoSQL)
+@app.post("/partidos/", response_model=PartidoSQL) # Si esperas un HTMLResponse, cambia esto a HTMLResponse
 async def crear_partido(
+    request: Request, # <--- ¡IMPORTANTE! Agrega Request aquí
     equipo_local_id: int = Form(...),
     equipo_visitante_id: int = Form(...),
     goles_local: int = Form(...),
@@ -657,31 +663,55 @@ async def crear_partido(
     pases_local: int = Form(...),
     pases_visitante: int = Form(...),
     fase: Fases = Form(...),
+    # Asegúrate de incluir la fecha_partido si es un campo de tu modelo PartidoSQL
+    fecha_partido: str = Form(...), # Agregado, ya que PartidoSQL lo tiene en models.py
     session: AsyncSession = Depends(get_session)
 ):
-    partido = PartidoSQL(
-        equipo_local_id=equipo_local_id,
-        equipo_visitante_id=equipo_visitante_id,
-        goles_local=goles_local,
-        goles_visitante=goles_visitante,
-        tarjetas_amarillas_local=tarjetas_amarillas_local,
-        tarjetas_amarillas_visitante=tarjetas_amarillas_visitante,
-        tarjetas_rojas_local=tarjetas_rojas_local,
-        tarjetas_rojas_visitante=tarjetas_rojas_visitante,
-        tiros_esquina_local=tiros_esquina_local,
-        tiros_esquina_visitante=tiros_esquina_visitante,
-        tiros_libres_local=tiros_libres_local,
-        tiros_libres_visitante=tiros_libres_visitante,
-        faltas_local=faltas_local,
-        faltas_visitante=faltas_visitante,
-        fueras_de_juego_local=fueras_de_juego_local,
-        fueras_de_juego_visitante=fueras_de_juego_visitante,
-        pases_local=pases_local,
-        pases_visitante=pases_visitante,
-        fase=fase
-    )
-    partido_creado_db = await create_partido_sql(session, partido)
-    return RedirectResponse(url=f"/partido_agregado/{partido_creado_db.id}", status_code=303)
+    try:
+        partido = PartidoSQL(
+            equipo_local_id=equipo_local_id,
+            equipo_visitante_id=equipo_visitante_id,
+            goles_local=goles_local,
+            goles_visitante=goles_visitante,
+            tarjetas_amarillas_local=tarjetas_amarillas_local,
+            tarjetas_amarillas_visitante=tarjetas_amarillas_visitante,
+            tarjetas_rojas_local=tarjetas_rojas_local,
+            tarjetas_rojas_visitante=tarjetas_rojas_visitante,
+            tiros_esquina_local=tiros_esquina_local,
+            tiros_esquina_visitante=tiros_esquina_visitante,
+            tiros_libres_local=tiros_libres_local,
+            tiros_libres_visitante=tiros_libres_visitante,
+            faltas_local=faltas_local,
+            faltas_visitante=faltas_visitante,
+            fueras_de_juego_local=fueras_de_juego_local,
+            fueras_de_juego_visitante=fueras_de_juego_visitante,
+            pases_local=pases_local,
+            pases_visitante=pases_visitante,
+            fase=fase,
+            # Asegúrate de pasar la fecha_partido. Usa remove_tzinfo si es necesario.
+            fecha_partido=remove_tzinfo(fecha_partido),
+            esta_activo=True # Asumo que siempre es True al crear
+        )
+        # Llama a create_partido_sql con el objeto 'partido'
+        await create_partido_sql(session, partido)
+        # Redirige a una página de éxito
+        return RedirectResponse(url=f"/partido_agregado/{partido.id}", status_code=303)
+
+    except HTTPException as e:
+        # Aquí renderizamos el template de error genérico
+        return templates.TemplateResponse(
+            "error.html",
+            {"request": request, "error_message": e.detail},  # Pasamos solo el mensaje de error
+            status_code=e.status_code  # Aseguramos que la respuesta HTTP sea 400
+        )
+    except Exception as e:
+        # Para cualquier otro error inesperado, también usamos el template de error
+        return templates.TemplateResponse(
+            "error.html",
+            {"request": request, "error_message": f"Ocurrió un error inesperado: {e}"},
+            status_code=500  # Un error interno del servidor
+        )
+
 
 
 @app.get("/partido_agregado/{partido_id}", response_class=HTMLResponse)
@@ -707,6 +737,41 @@ async def mostrar_partido_agregado(partido_id: int, request: Request, session: A
 @app.get("/partidos/", response_model=List[PartidoSQL])
 async def listar_partidos(session: AsyncSession = Depends(get_session)):
     return await obtener_todos_los_partidos(session)
+
+
+
+@app.post("/buscar-partido/", response_class=HTMLResponse)
+async def buscar_partido_html(
+        request: Request,
+        partido_id: int = Form(...),
+        session: AsyncSession = Depends(get_session)
+):
+    print(f"DEBUG (main): POST /buscar-partido/ recibido. ID del formulario: '{partido_id}' (tipo: {type(partido_id)})")
+
+    partido_encontrado = None
+    try:
+        partido_encontrado = await obtener_partido_por_id(session, partido_id)
+        if not partido_encontrado:
+            raise HTTPException(status_code=404, detail=f"Partido con ID '{partido_id}' no encontrado.")
+
+        print(f"DEBUG (main): Partido encontrado: {partido_encontrado.id}, Fase: {partido_encontrado.fase}")
+        return templates.TemplateResponse(
+            "partido_encontrado.html",
+            {"request": request, "partido": partido_encontrado}
+        )
+    except HTTPException as e:
+        print(f"DEBUG (main): HTTPException capturada: {e.detail}")
+        return templates.TemplateResponse(
+            "formulario_buscar_partido.html",
+            {"request": request, "error_message": e.detail}
+        )
+    except Exception as e:
+        print(f"DEBUG (main): ERROR INESPERADO al buscar partido: {e}")
+        return templates.TemplateResponse(
+            "formulario_buscar_partido.html",
+            {"request": request, "error_message": f"Error interno del servidor: {e}"}
+        )
+
 
 
 @app.get("/partidos/{partido_id}", response_model=PartidoSQL)
@@ -838,4 +903,6 @@ async def mostrar_info_desarrollador(request: Request):
 async def mostrar_reporte_menos_goleados(request: Request, session: AsyncSession = Depends(get_session)):
     equipos_menos_goleados = await obtener_equipos_menos_goleados(session)
     return templates.TemplateResponse("reporte_menos_goleados.html", {"request": request, "equipos": equipos_menos_goleados})
+
+
 

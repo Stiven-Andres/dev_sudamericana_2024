@@ -12,10 +12,10 @@
     </div>
     {% endif %}
 
-    <form action="/buscar-partido/" method="post" class="needs-validation" novalidate>
+    <form action="/partidos/buscar" method="post" class="needs-validation" novalidate>
         <div class="mb-3">
-            <label for="partido_id" class="form-label">Ingresa el ID del Partido:</label>
-            <input type="number" class="form-control" id="partido_id" name="partido_id" required min="1">
+            <label for="id_partido" class="form-label">Ingresa el ID del Partido:</label>
+            <input type="number" class="form-control" id="id_partido" name="id_partido" required min="1">
             <div class="invalid-feedback">
                 Por favor, ingresa un ID de partido válido.
             </div>
