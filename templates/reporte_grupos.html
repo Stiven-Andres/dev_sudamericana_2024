@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Tabla de Posiciones por Grupo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Tabla de Posiciones por Grupo</h1>
+
+    {% if reporte_grupos %}
+        {% for grupo_enum in Grupos %} {# Itera sobre el Enum de Grupos para asegurar el orden #}
+            {% set equipos_del_grupo = reporte_grupos[grupo_enum] %}
+            {% if equipos_del_grupo %}
+                <div class="card shadow-sm mb-5">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Grupo {{ grupo_enum.value.upper() }}</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Equipo</th>
+                                        <th scope="col">PJ</th>
+                                        <th scope="col">PG</th>
+                                        <th scope="col">PE</th>
+                                        <th scope="col">PP</th>
+                                        <th scope="col">GF</th>
+                                        <th scope="col">GC</th>
+                                        <th scope="col">DG</th>
+                                        <th scope="col">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for equipo in equipos_del_grupo %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>
+                                            {% if equipo.logo_url %}
+                                            <img src="{{ url_for('static', path=equipo.logo_url) }}" alt="{{ equipo.nombre }} Logo" class="me-2" style="width: 24px; height: 24px; object-fit: contain; border-radius: 50%;">
+                                            {% else %}
+                                            <img src="{{ url_for('static', path='img/shield.png') }}" alt="Default Logo" class="me-2" style="width: 24px; height: 24px; object-fit: contain; border-radius: 50%;">
+                                            {% endif %}
+                                            {{ equipo.nombre }}
+                                        </td>
+                                        <td>{{ equipo.partidos_jugados }}</td>
+                                        <td>{{ equipo.victorias }}</td>
+                                        <td>{{ equipo.empates }}</td>
+                                        <td>{{ equipo.derrotas }}</td>
+                                        <td>{{ equipo.goles_a_favor }}</td>
+                                        <td>{{ equipo.goles_en_contra }}</td>
+                                        <td>{{ equipo.diferencia_goles }}</td>
+                                        <td><strong>{{ equipo.puntos }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center mt-3" role="alert">
+                    No hay equipos registrados en el Grupo {{ grupo_enum.value.upper() }}.
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            No hay datos disponibles para generar el reporte de grupos. Asegúrate de tener equipos y partidos registrados.
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('mostrar_inicio') }}" class="btn btn-secondary">Volver al Inicio</a>
+    </div>
+</div>
+{% endblock %}

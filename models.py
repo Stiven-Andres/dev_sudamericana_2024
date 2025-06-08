@@ -88,6 +88,20 @@ class EquipoSQL(SQLModel, table=True):
     )
 
 
+class PosicionEquipoReporte(BaseModel):
+    id: int
+    nombre: str
+    grupo: Grupos
+    puntos: int
+    partidos_jugados: int
+    victorias: int
+    empates: int
+    derrotas: int
+    goles_a_favor: int
+    goles_en_contra: int
+    diferencia_goles: int
+    logo_url: Optional[str]
+
 # --------- Modelo Partido ---------
 class PartidoSQL(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

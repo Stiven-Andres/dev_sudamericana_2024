@@ -905,4 +905,8 @@ async def mostrar_reporte_menos_goleados(request: Request, session: AsyncSession
     return templates.TemplateResponse("reporte_menos_goleados.html", {"request": request, "equipos": equipos_menos_goleados})
 
 
-
+# NUEVO: Ruta para mostrar el reporte por grupos
+@app.get("/reportes/grupos", response_class=HTMLResponse)
+async def mostrar_reporte_por_grupos(request: Request, session: AsyncSession = Depends(get_session)):
+    reporte_grupos = await generar_reporte_por_grupos(session)
+    return templates.TemplateResponse("reporte_grupos.html", {"request": request, "reporte_grupos": reporte_grupos, "Grupos": Grupos})
