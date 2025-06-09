@@ -81,7 +81,7 @@ async def mostrar_formulario_actualizar_equipo(request: Request, session: AsyncS
 @app.get("/formulario-buscar-equipo", response_class=HTMLResponse)
 async def mostrar_formulario_buscar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
     equipos = await obtener_todos_los_equipos(session) # Se usa para el select del formulario
-    return templates.TemplateResponse("formulario_buscar_equipo.html", {"request": request, "equipos": equipos})
+    return templates.TemplateResponse("Formulario_buscar_equipo.html", {"request": request, "equipos": equipos})
 
 @app.get("/formulario-buscar-partido/", response_class=HTMLResponse)
 async def mostrar_formulario_buscar_partido(request: Request, session: AsyncSession = Depends(get_session)):
