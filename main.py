@@ -910,3 +910,11 @@ async def mostrar_reporte_menos_goleados(request: Request, session: AsyncSession
 async def mostrar_reporte_por_grupos(request: Request, session: AsyncSession = Depends(get_session)):
     reporte_grupos = await generar_reporte_por_grupos(session)
     return templates.TemplateResponse("reporte_grupos.html", {"request": request, "reporte_grupos": reporte_grupos, "Grupos": Grupos})
+
+# NEW ENDPOINT: Project documentation page
+@app.get("/acerca-de-proyecto", response_class=HTMLResponse)
+async def acerca_de_proyecto(request: Request):
+    """
+    Muestra una página con la documentación del proyecto, incluyendo diagramas y mockups.
+    """
+    return templates.TemplateResponse("acerca_de_proyecto.html", {"request": request})
