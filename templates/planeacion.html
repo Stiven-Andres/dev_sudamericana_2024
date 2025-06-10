@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Planeación del Proyecto{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4"> Planeación del Proyecto</h1>
+
+    <h3> Objetivos del Proyecto</h3>
+    <ul>
+        <li>Diseñar y desarrollar una aplicación web para la gestión de equipos y partidos de fútbol.</li>
+        <li>Facilitar el registro, consulta, modificación y análisis de datos deportivos.</li>
+        <li>Automatizar la generación de reportes por país y por fase del torneo.</li>
+    </ul>
+
+    <h3 class="mt-5"> Fuente de los Datos</h3>
+    <p>Los datos utilizados en este proyecto fueron recopilados de <strong>fuentes públicas y confiables</strong> como <em>Google Sports</em>, <em>ESPN</em>, <em>TyC Sports</em>, <em>El Tiempo</em>, <em>La Nación</em> y otros portales deportivos de Sudamérica. La información fue adaptada y organizada con fines académicos y de demostración.</p>
+
+
+    <h3 class="mt-5"> Casos de Uso</h3>
+    <div class="text-center">
+        <img src="/static/img/casos_de_uso.jpg" alt="Casos de uso" class="img-fluid rounded shadow-sm">
+    </div>
+
+    <h3 class="mt-5"> Modelo de Datos</h3>
+<p>El modelo de datos está compuesto por tres entidades principales: <strong>Equipo</strong>, <strong>Partido</strong> y <strong>Reporte</strong>. A continuación se presenta un resumen:</p>
+
+<ul>
+    <li><strong>EquipoSQL</strong>: nombre, país, grupo, puntos, estadísticas, estado activo</li>
+    <li><strong>PartidoSQL</strong>: equipos involucrados, goles, tarjetas, faltas, estadísticas, fecha y fase</li>
+    <li><strong>ReportePorPaisSQL</strong>: país, equipos, promedio de goles a favor y en contra</li>
+</ul>
+
+<p>Las relaciones están dadas por claves foráneas entre partidos y equipos (local/visitante).</p>
+
+</div>
+{% endblock %}

@@ -12,7 +12,7 @@ from pydantic import ConfigDict
 
 # --------- Otros ---------
 class Fases(str, Enum):
-    Play_off = "Play off"
+    Play_off = "Play_off"
     grupos = "Grupos"
     repechaje = "Repechaje"
     octavos = "Octavos"

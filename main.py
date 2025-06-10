@@ -923,3 +923,7 @@ async def acerca_de_proyecto(request: Request):
     Muestra una página con la documentación del proyecto, incluyendo diagramas y mockups.
     """
     return templates.TemplateResponse("acerca_de_proyecto.html", {"request": request})
+
+@app.get("/planeacion", response_class=HTMLResponse, name="planeacion")
+async def mostrar_planeacion(request: Request):
+    return templates.TemplateResponse("planeacion.html", {"request": request})
