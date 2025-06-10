@@ -28,7 +28,7 @@ class Paises(str, Enum):
     colombia = "Colombia"
     ecuador = "Ecuador"
     paraguay = "Paraguay"
-    peru = "Perú"
+    peru = "Peru"
     uruguay = "Uruguay"
     venezuela = "Venezuela"
 

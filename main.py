@@ -4,6 +4,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from shutil import copyfileobj
 from sqlalchemy.orm import selectinload
+from utils.sportmonks import get_equipos_copa_sudamericana
+from operations import create_equipo_sql
+from models import EquipoSQL, Paises, Grupos
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from models import *
 import uuid
@@ -135,6 +139,7 @@ async def buscar_equipo_html(
             "formulario_buscar_equipo.html",
             {"request": request, "equipos": equipos, "error_message": f"Error interno del servidor: {e}"}
         )
+
 
 @app.post("/actualizar-equipo/", response_class=HTMLResponse)
 async def actualizar_equipo_html(

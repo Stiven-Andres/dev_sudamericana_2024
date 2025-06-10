@@ -9,7 +9,12 @@ from sqlmodel import Session
 from sqlalchemy import func, text, case
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm import selectinload
+import os
+from dotenv import load_dotenv
+import httpx
 
+load_dotenv()
+API_TOKEN = os.getenv("SPORTMONKS_API_TOKEN")
 
 def normalizar_nombre(nombre: str) -> str:
     nombre = nombre.lower()
