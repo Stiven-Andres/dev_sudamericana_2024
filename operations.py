@@ -724,3 +724,26 @@ async def obtener_todos_los_reportes_por_fase(session: AsyncSession) -> List[Rep
         select(ReportePorFaseSQL)
     )
     return result.scalars().all()
+
+# --------- OPERATIONS USUARIO ---------
+async def crear_usuario_sql(session: AsyncSession, usuario: UsuarioSQL):
+    # Verificar si el correo ya existe
+    result = await session.execute(select(UsuarioSQL).where(UsuarioSQL.correo == usuario.correo))
+    existente = result.scalar_one_or_none()
+    if existente:
+        raise HTTPException(status_code=400, detail="El correo ya está registrado")
+
+    session.add(usuario)
+    await session.commit()
+    await session.refresh(usuario)
+    return usuario
+
+
+async def autenticar_usuario(session: AsyncSession, correo: str, contraseña: str):
+    result = await session.execute(select(UsuarioSQL).where(UsuarioSQL.correo == correo))
+    usuario = result.scalar_one_or_none()
+
+    if not usuario or usuario.contraseña != contraseña:
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+
+    return usuario

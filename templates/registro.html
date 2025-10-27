@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Registro de Usuario{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Registrar Usuario</h2>
+  <form method="post" action="/usuarios/registro" class="col-md-6 offset-md-3">
+    <div class="mb-3">
+      <label class="form-label">Nombre de Usuario</label>
+      <input type="text" name="nombre_usuario" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Correo</label>
+      <input type="email" name="correo" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Contraseña</label>
+      <input type="password" name="contraseña" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Rol</label>
+      <select name="rol" class="form-select">
+        <option value="usuario">Usuario</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Registrar</button>
+  </form>
+
+  {% if mensaje %}
+  <div class="alert alert-warning mt-3 text-center">{{ mensaje }}</div>
+  {% endif %}
+</div>
+{% endblock %}

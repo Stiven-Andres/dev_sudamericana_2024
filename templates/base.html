@@ -11,68 +11,106 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container px-lg-5">
-            <a class="navbar-brand" href="{{ url_for('mostrar_inicio') }}">Copa Sudamericana</a>
+            <a class="navbar-brand" href="{{ url_for('mostrar_login') }}">Copa Sudamericana</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('mostrar_inicio') }}">Inicio</a>
-                    </li>
 
-                    {# Menú Desplegable para Equipos #}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownEquipos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Equipos
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownEquipos">
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_equipos') }}">Ver Equipos Activos</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_equipo') }}">Añadir Nuevo Equipo</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_actualizar_equipo') }}">Actualizar Equipo</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_equipo') }}">Buscar Equipo por ID</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_eliminar_equipo') }}">Desactivar Equipo</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_equipos_inactivos') }}">Ver Equipos Inactivos</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_restaurar_equipo') }}">Restaurar Equipo</a></li>
-                        </ul>
-                    </li>
+                    {% if request.session.get('usuario') %}
+                        {% set rol = request.session['usuario']['rol'] %}
 
-                    {# Menú Desplegable para Partidos #}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownPartidos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Partidos
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownPartidos">
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_partidos') }}">Ver Todos los Partidos</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_partido') }}">Añadir Partido</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_partido') }}">Buscar Partido</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_modificar_partido') }}">Modificar Partido</a></li>
-                            <li><a class="dropdown-item" href="/partidos/inactivos">Ver Partidos inactivos</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_eliminar_partido') }}">Eliminar Partido</a></li>
-                            <li><a class="dropdown-item" href="/partidos/restaurar">Restaurar Partidos</a></li>
-                        </ul>
-                    </li>
+                        <!-- ==================== ADMIN ==================== -->
+                        {% if rol == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Panel Admin</a>
+                            </li>
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownReportes" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Reportes
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownReportes">
-                        <li><a class="dropdown-item" href="/reportes/pais">Generar Reporte por País</a></li>
-                        <li><a class="dropdown-item" href="/reportes/todos">Ver Todos los Reportes</a></li>
-                        <li><a class="dropdown-item" href="/reportes/fase">Generar Reporte por Fase</a></li>
-                            <li><a class="dropdown-item" href="/reportes/fase/todos">Ver Todos los Reportes por Fase</a></li>
-                        </ul>
-                    </li>
+                            <!-- Menú Equipos -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownEquipos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Equipos
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownEquipos">
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_equipos') }}">Ver Equipos Activos</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_equipo') }}">Añadir Nuevo Equipo</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_actualizar_equipo') }}">Actualizar Equipo</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_equipo') }}">Buscar Equipo por ID</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_eliminar_equipo') }}">Desactivar Equipo</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_equipos_inactivos') }}">Ver Equipos Inactivos</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_restaurar_equipo') }}">Restaurar Equipo</a></li>
+                                </ul>
+                            </li>
 
+                            <!-- Menú Partidos -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownPartidos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Partidos
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownPartidos">
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_partidos') }}">Ver Todos los Partidos</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_partido') }}">Añadir Partido</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_partido') }}">Buscar Partido</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_modificar_partido') }}">Modificar Partido</a></li>
+                                    <li><a class="dropdown-item" href="/partidos/inactivos">Ver Partidos Inactivos</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_eliminar_partido') }}">Eliminar Partido</a></li>
+                                    <li><a class="dropdown-item" href="/partidos/restaurar">Restaurar Partidos</a></li>
+                                </ul>
+                            </li>
+
+                            <!-- Menú Reportes -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownReportes" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Reportes
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownReportes">
+                                    <li><a class="dropdown-item" href="/reportes/pais">Generar Reporte por País</a></li>
+                                    <li><a class="dropdown-item" href="/reportes/todos">Ver Todos los Reportes</a></li>
+                                    <li><a class="dropdown-item" href="/reportes/fase">Generar Reporte por Fase</a></li>
+                                    <li><a class="dropdown-item" href="/reportes/fase/todos">Ver Todos los Reportes por Fase</a></li>
+                                </ul>
+                            </li>
+
+                        <!-- ==================== USUARIO ==================== -->
+                        {% elif rol == 'usuario' %}
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('usuario_inicio') }}">Inicio Usuario</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownEquipos_2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Equipos
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownEquipos">
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_equipo') }}">Buscar Equipo por ID</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_equipos') }}">Ver Equipos Activos</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownPartidos_1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Partidos
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownPartidos">
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_partidos') }}">Ver Todos los Partidos</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('mostrar_formulario_buscar_partido') }}">Buscar Partido</a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+
+                        <!-- Cerrar Sesión -->
+                        <li class="nav-item"><a class="nav-link text-danger" href="/logout">Cerrar Sesión</a></li>
+
+                    {% else %}
+                        <!-- ==================== SIN SESIÓN ==================== -->
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_login') }}">Iniciar Sesión</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
-
 
     <main class="py-5">
         <div class="container px-lg-5">
@@ -82,7 +120,10 @@
 
     <footer class="py-5 bg-dark">
         <div class="container">
-            <p class="m-0 text-center text-white">© Copa Sudamericana 2024</p>
+            <p class="m-0 text-center text-white">
+                © Copa Sudamericana 2024 |
+                <a href="/acerca-de/desarrollador" class="text-white text-decoration-none">Acerca del Desarrollador</a>
+            </p>
         </div>
     </footer>
 
@@ -90,4 +131,5 @@
     <script src="{{ url_for('static', path='js/scripts.js') }}"></script>
 </body>
 </html>
+
 

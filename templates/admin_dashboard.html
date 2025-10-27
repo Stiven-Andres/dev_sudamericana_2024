@@ -6,17 +6,21 @@
 <div class="p-4 p-lg-5 bg-light rounded-3 text-center">
     <div class="m-4 m-lg-5">
         <h1 class="display-5 fw-bold">¡Bienvenido a la ventana de administrador!</h1>
-        <p class="fs-4">Explora los equipos, partidos y estadísticas del torneo.</p>
-        <a class="btn btn-primary btn-lg" href="{{ url_for('mostrar_equipos') }}">Ver Equipos</a>
+        <p class="fs-4">Explora las herramientas de gestión de usuarios, equipos, partidos y reportes.</p>
+
+        <!-- 🔹 Botón actualizado -->
+        <a class="btn btn-primary btn-lg" href="{{ url_for('mostrar_registro') }}">Formulario registro</a>
+
         <h2 class="mt-5 mb-4">Reportes y Estadísticas</h2>
         <div class="d-grid gap-3 col-6 mx-auto">
             <a class="btn btn-success btn-lg" href="/reportes/pais">Generar Reporte por País</a>
             <a class="btn btn-info btn-lg text-white" href="/reportes/todos">Ver Todos los Reportes por País</a>
             <a class="btn btn-warning btn-lg" href="/reportes/fase">Generar Reporte por Fase</a>
             <a class="btn btn-danger btn-lg" href="/reportes/fase/todos">Ver Todos los Reportes por Fase</a>
-            <a class="btn btn-danger btn-lg" href="/reportes/menos-goleados">Ver reporte menos goleados</a>
-            <a class="btn btn-danger btn-lg" href="/reportes/grupos">Ver reporte de grupos</a>
+            <a class="btn btn-secondary btn-lg" href="/reportes/menos-goleados">Ver reporte menos goleados</a>
+            <a class="btn btn-dark btn-lg" href="/reportes/grupos">Ver reporte de grupos</a>
         </div>
     </div>
 </div>
 {% endblock %}
+

@@ -130,3 +130,17 @@ class ReportePorFaseSQL(SQLModel, table=True):
     total_goles_local: int
     total_goles_visitante: int
     updated_at: datetime = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})
+
+# --------- Modelo Usuario ---------
+class Roles(str, Enum):
+    administrador = "Administrador"
+    usuario = "Usuario"
+
+class UsuarioSQL(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    nombre_usuario: str = Field(index=True)
+    correo: str = Field(unique=True)
+    contraseña: str
+    rol: str = Field(default="usuario")  # puede ser 'admin' o 'usuario'
+
+

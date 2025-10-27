@@ -16,6 +16,10 @@ from typing import List, Optional
 from utils.connection_db import *
 from contextlib import asynccontextmanager
 from operations import *
+from starlette.middleware.sessions import SessionMiddleware
+
+# Clave secreta para las sesiones (puede ser cualquier string largo y seguro)
+
 
 
 # Configuración de plantilla Jinja2
@@ -27,18 +31,25 @@ async def lifespan(app: FastAPI):
 
 templates = Jinja2Templates(directory="templates")
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(SessionMiddleware, secret_key="supersecreto123")
 UPLOAD_DIR = "static/logos"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 
 # Archivos estáticos (CSS, imágenes, etc.)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Redirigir raíz al login
+@app.get("/", include_in_schema=False)
+async def redirigir_inicio():
+    return RedirectResponse(url="/login")
 
 # ----------- VISTAS HTML (Jinja2) --------------
 @app.get("/inicio", response_class=HTMLResponse)
 async def mostrar_inicio(request: Request):
     return templates.TemplateResponse("inicio.html", {"request": request})
+
 
 
 @app.get("/formulario-equipo", response_class=HTMLResponse)
@@ -50,20 +61,24 @@ async def formulario_equipo(request: Request):
 @app.get("/partidos/restaurar", response_class=HTMLResponse)
 async def mostrar_formulario_restaurar_partido(request: Request, session: AsyncSession = Depends(get_session)):
     partidos_inactivos = await obtener_todos_los_partidos_inactivos(session)
+
     return templates.TemplateResponse("restaurar_partidos.html", {"request": request, "partidos": partidos_inactivos})
 
 @app.get("/formulario_equipo", response_class=HTMLResponse)
 async def mostrar_formulario_equipo(request: Request):
+
     return templates.TemplateResponse("formulario_equipo.html", {"request": request})
 
 @app.get("/partido/formulario", response_class=HTMLResponse)
 async def mostrar_formulario_partido(request: Request, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(EquipoSQL))
     equipos = result.scalars().all()
+
     return templates.TemplateResponse("formulario_partido.html", {"request": request, "equipos": equipos})
 
 @app.get("/equipo-agregado", name="mostrar_equipo_agregado", response_class=HTMLResponse)
 async def mostrar_equipo_agregado(request: Request, nombre: str, grupo: str, pais: str, logo_url: str):
+
     return templates.TemplateResponse("equipo_agregado.html", {
         "request": request,
         "nombre": nombre,
@@ -72,20 +87,105 @@ async def mostrar_equipo_agregado(request: Request, nombre: str, grupo: str, pai
         "logo_url": logo_url,
     })
 
+#----------- USUARIOS / LOGIN --------------
+# Mostrar formulario de registro
+@app.get("/usuarios/registro", response_class=HTMLResponse)
+async def mostrar_registro(request: Request):
+    return templates.TemplateResponse("registro.html", {"request": request})
+
+
+# Procesar registro
+@app.post("/usuarios/registro")
+async def registrar_usuario(
+    request: Request,
+    nombre_usuario: str = Form(...),
+    correo: str = Form(...),
+    contraseña: str = Form(...),
+    rol: str = Form("usuario"),
+    session: AsyncSession = Depends(get_session)
+):
+    rol = rol.lower().strip()  # ✅ normalizamos antes de guardar
+
+    nuevo_usuario = UsuarioSQL(
+        nombre_usuario=nombre_usuario,
+        correo=correo,
+        contraseña=contraseña,
+        rol=rol
+    )
+
+    session.add(nuevo_usuario)
+    await session.commit()
+    await session.refresh(nuevo_usuario)
+
+    # ✅ mensaje de confirmación
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request, "mensaje": "Usuario registrado correctamente. Inicia sesión."}
+    )
+
+
+# Mostrar formulario de login
+@app.get("/login", response_class=HTMLResponse)
+async def mostrar_login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.post("/login")
+async def login_post(
+    request: Request,
+    nombre_usuario: str = Form(...),
+    contraseña: str = Form(...),
+    session: AsyncSession = Depends(get_session)
+):
+    query = select(UsuarioSQL).where(UsuarioSQL.nombre_usuario == nombre_usuario)
+    result = await session.execute(query)
+    usuario = result.scalar_one_or_none()
+
+    if not usuario or usuario.contraseña != contraseña:
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "mensaje": "Credenciales incorrectas."}
+        )
+
+    # Guardamos los datos del usuario en sesión
+    request.session["usuario"] = {
+        "nombre": usuario.nombre_usuario,
+        "rol": usuario.rol.lower().strip()
+    }
+
+    # Redirigir según rol
+    if usuario.rol.lower().strip() == "admin":
+        return RedirectResponse(url="/admin/dashboard", status_code=303)
+    else:
+        return RedirectResponse(url="/usuario/inicio", status_code=303)
+
+
+# Vistas de prueba
+@app.get("/admin/dashboard", response_class=HTMLResponse)
+async def admin_dashboard(request: Request):
+    return templates.TemplateResponse("admin_dashboard.html", {"request": request})
+
+
+@app.get("/usuario/inicio", response_class=HTMLResponse)
+async def usuario_inicio(request: Request):
+    return templates.TemplateResponse("usuario_inicio.html", {"request": request})
 
 @app.get("/formulario-actualizar-equipo", response_class=HTMLResponse)
 async def mostrar_formulario_actualizar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
     equipos = await obtener_todos_los_equipos(session)
+
     return templates.TemplateResponse("formulario_actualizar_equipo.html", {"request": request, "equipos": equipos})
 
 @app.get("/formulario-buscar-equipo", response_class=HTMLResponse)
 async def mostrar_formulario_buscar_equipo(request: Request, session: AsyncSession = Depends(get_session)):
     equipos = await obtener_todos_los_equipos(session) # Se usa para el select del formulario
+
     return templates.TemplateResponse("formulario_buscar_equipo.html", {"request": request, "equipos": equipos})
 
 @app.get("/formulario-buscar-partido/", response_class=HTMLResponse)
 async def mostrar_formulario_buscar_partido(request: Request, session: AsyncSession = Depends(get_session)):
     # No necesitamos cargar equipos para este formulario, solo el ID
+
     return templates.TemplateResponse("formulario_buscar_partido.html", {"request": request})
 
 @app.get("/formulario-modificar-partido/", response_class=HTMLResponse)
@@ -278,6 +378,7 @@ async def listar_partidos_inactivos_html(request: Request, session: AsyncSession
 @app.get("/equipos-html", response_class=HTMLResponse)
 async def mostrar_equipos(request: Request, session: AsyncSession = Depends(get_session)):
     equipos = await obtener_todos_los_equipos(session)
+    rol = request.session.get("usuario", {}).get("rol", None)
     return templates.TemplateResponse("equipos.html", {"request": request, "equipos": equipos})
 
 
@@ -522,9 +623,18 @@ async def restaurar_equipo_post(request: Request, equipo_id: int = Form(...),
 
 
 # ----------- OTROS --------------
-@app.get("/")
-async def root():
-    return {"message": "Bienvenido a la API de Equipos, Partidos y Reportes"}
+@app.get("/", response_class=HTMLResponse)
+async def inicio(request: Request):
+    usuario = request.session.get("usuario")
+    if not usuario:
+        return RedirectResponse(url="/login", status_code=303)
+
+    # Redirigir según rol
+    if usuario["rol"] == "admin":
+        return RedirectResponse(url="/admin/dashboard", status_code=303)
+    else:
+        return RedirectResponse(url="/usuario/inicio", status_code=303)
+
 
 @app.get("/hello/{name}")
 async def saludar(name: str):
@@ -813,4 +923,29 @@ async def ver_reporte_fase_html(
             raise HTTPException(status_code=404, detail=f"No se pudo generar ni encontrar el reporte para la fase {fase_nombre.value}: {e}")
 
     return templates.TemplateResponse("reporte_fase_detalle.html", {"request": request, "reporte": reporte})
+
+@app.get("/acerca-de/desarrollador", response_class=HTMLResponse)
+async def mostrar_info_desarrollador(request: Request):
+    """
+    Muestra una página con información sobre el desarrollador.
+    """
+    # Puedes pasar cualquier información que quieras a la plantilla
+    info_desarrollador = {
+        "nombre": "Brayan Steven Quintero",
+        "email": "brayan.quintero.m@gmail.com",
+        "rol": "Desarrollador Full Stack",
+        "linkedin": "https://www.linkedin.com/in/brayan-steven-quintero-m/", # Reemplaza con tu perfil real
+        "github": "https://github.com/Brayan-Q", # Reemplaza con tu perfil real
+        "experiencia": "Desarrollo de aplicaciones web con FastAPI y bases de datos PostgreSQL.",
+        "proyecto": "Copa Sudamericana API"
+    }
+    return templates.TemplateResponse(
+        "acerca_de_desarrollador.html",
+        {"request": request, "desarrollador": info_desarrollador}
+    )
+
+@app.get("/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
 

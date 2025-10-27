@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Iniciar Sesión - Copa Sudamericana{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <!-- Tarjeta del formulario -->
+            <div class="card shadow border-primary">
+                <div class="card-header bg-dark text-white text-center">
+                    <h4><i class="bi bi-person-circle"></i> Iniciar Sesión</h4>
+                </div>
+                <div class="card-body bg-light">
+                    <!-- Mostrar error si hay -->
+                    {% if error %}
+                    <div class="alert alert-danger text-center">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Formulario de inicio de sesión -->
+                    <form method="post" action="/login">
+                        <div class="mb-3">
+                            <label for="nombre_usuario" class="form-label fw-bold">Nombre de usuario</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="nombre_usuario"
+                                name="nombre_usuario"
+                                placeholder="Ingresa tu usuario"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contraseña" class="form-label fw-bold">Contraseña</label>
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="contraseña"
+                                name="contraseña"
+                                placeholder="Ingresa tu contraseña"
+                                required
+                            >
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Ingresar
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <div class="text-center">
+                        <p class="mb-1">¿No tienes una cuenta?</p>
+                        <a href="{{ url_for('mostrar_registro') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-person-plus"></i> Registrarse
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
