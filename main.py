@@ -50,12 +50,16 @@ async def redirigir_inicio():
 async def mostrar_inicio(request: Request):
     return templates.TemplateResponse("inicio.html", {"request": request})
 
-
-
 @app.get("/formulario-equipo", response_class=HTMLResponse)
-async def formulario_equipo(request: Request):
-    # Pasa el Enum Paises al template para el dropdown
-    return templates.TemplateResponse("formulario_equipo.html", {"request": request, "Paises": Paises})
+async def mostrar_formulario_equipo(request: Request):
+    return templates.TemplateResponse(
+        "formulario_equipo.html",
+        {
+            "request": request,
+            "Paises": Paises,
+            "Grupos": Grupos
+        }
+    )
 
 # NEW ENDPOINT: Display form to restore inactive matches
 @app.get("/partidos/restaurar", response_class=HTMLResponse)
@@ -64,10 +68,8 @@ async def mostrar_formulario_restaurar_partido(request: Request, session: AsyncS
 
     return templates.TemplateResponse("restaurar_partidos.html", {"request": request, "partidos": partidos_inactivos})
 
-@app.get("/formulario_equipo", response_class=HTMLResponse)
-async def mostrar_formulario_equipo(request: Request):
 
-    return templates.TemplateResponse("formulario_equipo.html", {"request": request})
+
 
 @app.get("/partido/formulario", response_class=HTMLResponse)
 async def mostrar_formulario_partido(request: Request, session: AsyncSession = Depends(get_session)):

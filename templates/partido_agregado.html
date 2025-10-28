@@ -53,8 +53,8 @@
             <li class="list-group-item"><strong>Pases Visitante:</strong> {{ partido.pases_visitante }}</li>
         </ul>
         <div class="card-footer text-center">
-            <a href="/partidos/" class="btn btn-primary mt-3">Ver todos los partidos</a>
-            <a href="/formulario-crear-partido" class="btn btn-secondary mt-3">Registrar otro partido</a>
+            <a href="{{ url_for('mostrar_partidos') }}" class="btn btn-primary">Ver todos los partidos</a>
+            <a href="{{ url_for('mostrar_partidos') }}" class="btn btn-primary">Registrar otro partido</a>
         </div>
     </div>
 </div>

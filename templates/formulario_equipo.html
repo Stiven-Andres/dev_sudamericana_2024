@@ -1,61 +1,78 @@
 {% extends "base.html" %}
-{% block title %}Registrar Equipo{% endblock %}
 {% block content %}
 <div class="container mt-5">
     <h1 class="mb-4 text-center">Registrar Nuevo Equipo</h1>
 
-    <form method="post" action="/equipos/" enctype="multipart/form-data" class="col-md-6 offset-md-3 needs-validation" novalidate>
+    <form method="post" action="/equipos/" enctype="multipart/form-data" class="needs-validation" novalidate>
 
         <!-- Nombre -->
         <div class="mb-3">
             <label for="nombre" class="form-label">Nombre del equipo</label>
             <input type="text" class="form-control" id="nombre" name="nombre" required>
-            <div class="invalid-feedback">Por favor, ingresa el nombre del equipo.</div>
+            <div class="invalid-feedback">
+                Por favor, ingresa el nombre del equipo.
+            </div>
         </div>
 
         <!-- País -->
         <div class="mb-3">
             <label for="pais" class="form-label">País</label>
-            <input type="text" class="form-control" id="pais" name="pais" required>
+            <select class="form-select" id="pais" name="pais" required>
+                <option value="">Seleccione un país</option>
+                {% for nombre, pais in Paises.__members__.items() %}
+                    <option value="{{ pais.value }}">{{ pais.value | capitalize }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Por favor, selecciona un país.
+            </div>
         </div>
 
-        <!-- Grupo (Menú desplegable dinámico basado en Enum) -->
+        <!-- Grupo -->
         <div class="mb-3">
             <label for="grupo" class="form-label">Grupo</label>
             <select class="form-select" id="grupo" name="grupo" required>
-                <option value="" disabled selected>Seleccione un grupo</option>
-                {% for grupo in Grupos %}
-                    <option value="{{ grupo.value|upper }}">Grupo {{ grupo.value|upper }}</option>
+                <option value="">Seleccione un grupo</option>
+                {% for nombre, grupo in Grupos.__members__.items() %}
+                    <option value="{{ grupo.value }}">{{ grupo.value | upper }}</option>
                 {% endfor %}
             </select>
-            <div class="invalid-feedback">Por favor, selecciona un grupo.</div>
+            <div class="invalid-feedback">
+                Por favor, selecciona un grupo.
+            </div>
         </div>
 
         <!-- Puntos -->
         <div class="mb-3">
             <label for="puntos" class="form-label">Puntos</label>
-            <input type="number" class="form-control" id="puntos" name="puntos" required min="0" value="0">
-            <div class="invalid-feedback">Por favor, ingresa los puntos.</div>
+            <input type="number" class="form-control" id="puntos" name="puntos" value="0" required min="0">
+            <div class="invalid-feedback">
+                Por favor, ingresa los puntos.
+            </div>
         </div>
 
         <!-- Logo -->
         <div class="mb-3">
             <label for="logo" class="form-label">Logo del equipo</label>
             <input type="file" class="form-control" id="logo" name="logo" accept=".png,.jpg,.jpeg" required>
-            <div class="invalid-feedback">Por favor, selecciona un logo.</div>
+            <div class="invalid-feedback">
+                Por favor, selecciona un logo.
+            </div>
         </div>
 
         <!-- Estado -->
         <div class="mb-3">
-            <label for="esta_activo" class="form-label">Estado del equipo</label>
+            <label for="esta_activo" class="form-label">Estado del Equipo</label>
             <select class="form-select" id="esta_activo" name="esta_activo" required>
-                <option value="true" selected>Activo</option>
+                <option value="true">Activo</option>
                 <option value="false">Inactivo</option>
             </select>
+            <div class="invalid-feedback">
+                Por favor, selecciona el estado del equipo.
+            </div>
         </div>
 
-        <!-- Botón -->
-        <div class="d-grid">
+        <div class="text-center">
             <button type="submit" class="btn btn-primary">Registrar equipo</button>
         </div>
     </form>
