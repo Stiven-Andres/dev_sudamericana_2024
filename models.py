@@ -32,6 +32,16 @@ class Paises(str, Enum):
     uruguay = "Uruguay"
     venezuela = "Venezuela"
 
+class Grupos(str, Enum):
+    a="a"
+    b="b"
+    c="c"
+    d="d"
+    e="e"
+    f="f"
+    g="g"
+    h="h"
+
 class EquipoCreate(BaseModel):
     id: Optional[int] = None
     nombre: str
@@ -68,7 +78,19 @@ class EquipoSQL(SQLModel, table=True):
         back_populates="equipo_visitante",
         sa_relationship_kwargs={"foreign_keys": "PartidoSQL.equipo_visitante_id"}
     )
-
+class PosicionEquipoReporte(BaseModel):
+    id: int
+    nombre: str
+    grupo: Grupos
+    puntos: int
+    partidos_jugados: int
+    victorias: int
+    empates: int
+    derrotas: int
+    goles_a_favor: int
+    goles_en_contra: int
+    diferencia_goles: int
+    logo_url: Optional[str]
 
 # --------- Modelo Partido ---------
 class PartidoSQL(SQLModel, table=True):
@@ -131,6 +153,13 @@ class ReportePorFaseSQL(SQLModel, table=True):
     total_goles_visitante: int
     updated_at: datetime = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})
 
+class EquipoMenosGoleadoReporte(BaseModel):
+    id: Optional[int] = None
+    nombre: str
+    pais: Paises
+    grupo: Grupos
+    logo_url: Optional[str]
+    goles_en_contra: int
 # --------- Modelo Usuario ---------
 class Roles(str, Enum):
     administrador = "Administrador"

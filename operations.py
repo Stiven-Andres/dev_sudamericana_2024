@@ -747,3 +747,185 @@ async def autenticar_usuario(session: AsyncSession, correo: str, contraseña: st
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
     return usuario
+
+
+async def obtener_equipos_menos_goleados(session: AsyncSession) -> List[EquipoMenosGoleadoReporte]:
+    # Subquery para sumar goles recibidos como local
+    goles_contra_local_subquery = (
+        select(
+            PartidoSQL.equipo_local_id.label("equipo_id"),
+            func.sum(PartidoSQL.goles_visitante).label("goles_en_contra_local")
+        )
+        .group_by(PartidoSQL.equipo_local_id)
+        .subquery("gcl") # Nombre explícito para el subquery
+    )
+
+    # Subquery para sumar goles recibidos como visitante
+    goles_contra_visitante_subquery = (
+        select(
+            PartidoSQL.equipo_visitante_id.label("equipo_id"),
+            func.sum(PartidoSQL.goles_local).label("goles_en_contra_visitante")
+        )
+        .group_by(PartidoSQL.equipo_visitante_id)
+        .subquery("gcv") # Nombre explícito para el subquery
+    )
+
+    # Consulta interna para calcular los goles en contra por equipo
+    # Esta subconsulta ya tendrá una fila por equipo con su total de goles recibidos
+    base_query_for_ranking = (
+        select(
+            EquipoSQL.id,
+            EquipoSQL.nombre,
+            EquipoSQL.pais,
+            EquipoSQL.grupo,
+            EquipoSQL.logo_url,
+            (
+                func.coalesce(goles_contra_local_subquery.c.goles_en_contra_local, 0) +
+                func.coalesce(goles_contra_visitante_subquery.c.goles_en_contra_visitante, 0)
+            ).label("goles_en_contra")
+        )
+        .join(goles_contra_local_subquery, EquipoSQL.id == goles_contra_local_subquery.c.equipo_id, isouter=True)
+        .join(goles_contra_visitante_subquery, EquipoSQL.id == goles_contra_visitante_subquery.c.equipo_id, isouter=True)
+        # No se necesita un GROUP BY explícito aquí si EquipoSQL.id es la clave primaria
+        # y las subconsultas ya agregan por equipo_id.
+    ).subquery("ranked_teams_pre") # Convertir esta parte en un subquery
+
+    # Consulta final que selecciona de la subconsulta y aplica el ORDER BY y LIMIT
+    query = (
+        select(
+            base_query_for_ranking.c.id,
+            base_query_for_ranking.c.nombre,
+            base_query_for_ranking.c.pais,
+            base_query_for_ranking.c.grupo,
+            base_query_for_ranking.c.logo_url,
+            base_query_for_ranking.c.goles_en_contra
+        )
+        .order_by(base_query_for_ranking.c.goles_en_contra.asc()) # Ordenar por la columna ya calculada
+        .limit(6) # Limitar a los 6 primeros
+    )
+
+    result = await session.execute(query)
+    equipos_data = result.all()
+
+    # Reconstruir objetos usando el modelo EquipoMenosGoleadoReporte
+    equipos_con_goles = []
+    for data in equipos_data:
+        equipo = EquipoMenosGoleadoReporte(
+            id=data.id,
+            nombre=data.nombre,
+            pais=data.pais,
+            grupo=data.grupo,
+            logo_url=data.logo_url,
+            goles_en_contra=data.goles_en_contra,
+        )
+        equipos_con_goles.append(equipo)
+    return equipos_con_goles
+
+# NUEVA FUNCIÓN: Generar reporte de tabla de posiciones por grupo
+async def generar_reporte_por_grupos(session: AsyncSession) -> Dict[Grupos, List[PosicionEquipoReporte]]:
+    """
+    Genera un reporte de tabla de posiciones para cada grupo.
+    Calcula dinámicamente las estadísticas de cada equipo (partidos jugados, victorias, etc.)
+    y los ordena dentro de cada grupo.
+    """
+    print("DEBUG (operations): Generando reporte por grupos...")
+
+    # Obtener todos los equipos activos con sus IDs
+    equipos_query = await session.execute(
+        select(EquipoSQL.id, EquipoSQL.nombre, EquipoSQL.grupo, EquipoSQL.logo_url).where(EquipoSQL.esta_activo == True)
+    )
+    equipos_activos = equipos_query.all()
+
+    # Obtener todos los partidos activos
+    partidos_query = await session.execute(
+        select(PartidoSQL)
+        .where(PartidoSQL.esta_activo == True)
+        .options(selectinload(PartidoSQL.equipo_local), selectinload(PartidoSQL.equipo_visitante))
+    )
+    partidos_activos: List[PartidoSQL] = partidos_query.scalars().all()
+
+    # Inicializar estadísticas para cada equipo
+    stats_equipos: Dict[int, Dict[str, Any]] = {}
+    for equipo_id, nombre, grupo, logo_url in equipos_activos:
+        stats_equipos[equipo_id] = {
+            "id": equipo_id,
+            "nombre": nombre,
+            "grupo": grupo,
+            "puntos": 0,
+            "partidos_jugados": 0,
+            "victorias": 0,
+            "empates": 0,
+            "derrotas": 0,
+            "goles_a_favor": 0,
+            "goles_en_contra": 0,
+            "diferencia_goles": 0,
+            "logo_url": logo_url
+        }
+
+    # Procesar cada partido para acumular estadísticas
+    for partido in partidos_activos:
+        local_id = partido.equipo_local_id
+        visitante_id = partido.equipo_visitante_id
+
+        # Asegurarse de que ambos equipos del partido existen y están activos en nuestras estadísticas
+        if local_id in stats_equipos and visitante_id in stats_equipos:
+            # Equipo Local
+            stats_equipos[local_id]["partidos_jugados"] += 1
+            stats_equipos[local_id]["goles_a_favor"] += partido.goles_local
+            stats_equipos[local_id]["goles_en_contra"] += partido.goles_visitante
+
+            # Equipo Visitante
+            stats_equipos[visitante_id]["partidos_jugados"] += 1
+            stats_equipos[visitante_id]["goles_a_favor"] += partido.goles_visitante
+            stats_equipos[visitante_id]["goles_en_contra"] += partido.goles_local
+
+            # Determinar resultado y asignar puntos/victorias/empates/derrotas
+            if partido.goles_local > partido.goles_visitante:
+                # Gana local
+                stats_equipos[local_id]["puntos"] += 3
+                stats_equipos[local_id]["victorias"] += 1
+                stats_equipos[visitante_id]["derrotas"] += 1
+            elif partido.goles_local < partido.goles_visitante:
+                # Gana visitante
+                stats_equipos[visitante_id]["puntos"] += 3
+                stats_equipos[visitante_id]["victorias"] += 1
+                stats_equipos[local_id]["derrotas"] += 1
+            else:
+                # Empate
+                stats_equipos[local_id]["puntos"] += 1
+                stats_equipos[local_id]["empates"] += 1
+                stats_equipos[visitante_id]["puntos"] += 1
+                stats_equipos[visitante_id]["empates"] += 1
+
+    # Calcular diferencia de goles
+    for equipo_id in stats_equipos:
+        stats_equipos[equipo_id]["diferencia_goles"] = (
+            stats_equipos[equipo_id]["goles_a_favor"] - stats_equipos[equipo_id]["goles_en_contra"]
+        )
+
+    # Agrupar y ordenar equipos por grupo
+    reporte_por_grupos: Dict[Grupos, List[PosicionEquipoReporte]] = {grupo: [] for grupo in Grupos}
+
+    for equipo_data in stats_equipos.values():
+        equipo_reporte = PosicionEquipoReporte(**equipo_data)
+        reporte_por_grupos[equipo_reporte.grupo].append(equipo_reporte)
+
+    # Ordenar cada grupo: Puntos (desc), Diferencia de Goles (desc), Goles a Favor (desc), Nombre (asc)
+    for grupo, equipos_lista in reporte_por_grupos.items():
+        equipos_lista.sort(
+            key=lambda x: (x.puntos, x.diferencia_goles, x.goles_a_favor, x.nombre),
+            reverse=True # Puntos, DG, GF en orden descendente. Nombre en ascendente se maneja con `-x.nombre` o sin `reverse`
+        )
+        # Para el nombre en ascendente, necesitas una segunda pasada de ordenación si el resto es descendente
+        # o un truco como invertir el valor al ordenar
+        # La solución más limpia es ordenar múltiples veces si tienes diferentes órdenes de ASc/DESC
+        # o usar un "cmp_to_key" si python 3.4 o menos.
+        # Para simplificar aquí, ordenamos primero por nombre, luego por GF, luego DG, luego Puntos
+        equipos_lista.sort(key=lambda x: x.nombre) # Nombre ascendente
+        equipos_lista.sort(key=lambda x: x.goles_a_favor, reverse=True) # Goles a favor descendente
+        equipos_lista.sort(key=lambda x: x.diferencia_goles, reverse=True) # Diferencia de goles descendente
+        equipos_lista.sort(key=lambda x: x.puntos, reverse=True) # Puntos descendente
+
+
+    print("DEBUG (operations): Reporte por grupos generado y ordenado.")
+    return reporte_por_grupos

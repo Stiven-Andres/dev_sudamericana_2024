@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Reporte: Equipos Menos Goleados{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4 text-primary">🏆 Equipos Menos Goleados - Copa Sudamericana</h1>
+    <p class="text-center text-muted mb-5">
+        Este reporte muestra los <strong>5 equipos</strong> con menos goles recibidos en el torneo actual.
+    </p>
+
+    {% if equipos %}
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle text-center shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>Posición</th>
+                    <th>Logo</th>
+                    <th>Equipo</th>
+                    <th>País</th>
+                    <th>Grupo</th>
+                    <th>Goles en Contra</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for equipo in equipos %}
+                <tr>
+                    <td><strong>{{ loop.index }}</strong></td>
+                    <td>
+                        <img src="{{ url_for('static', path=equipo.logo_url) }}"
+                             alt="{{ equipo.nombre }}"
+                             style="width: 50px; height: 50px; object-fit: contain;">
+                    </td>
+                    <td>{{ equipo.nombre }}</td>
+                    <td>{{ equipo.pais|capitalize }}</td>
+                    <td>{{ equipo.grupo }}</td>
+                    <td><span class="badge bg-success fs-6">{{ equipo.goles_en_contra }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-warning text-center">
+            No hay datos disponibles para generar el reporte.
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="/admin/dashboard" class="btn btn-secondary me-2">
+            <i class="bi bi-arrow-left-circle"></i> Volver al Panel
+        </a>
+        <a href="/reportes/grupos" class="btn btn-primary">
+            <i class="bi bi-bar-chart"></i> Ver Reporte por Grupos
+        </a>
+    </div>
+</div>
+{% endblock %}
