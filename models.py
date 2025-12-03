@@ -172,4 +172,6 @@ class UsuarioSQL(SQLModel, table=True):
     contraseña: str
     rol: str = Field(default="usuario")  # puede ser 'admin' o 'usuario'
 
-
+class LoginRequest(BaseModel):
+    nombre_usuario: str
+    contraseña: str
